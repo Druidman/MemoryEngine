@@ -14,6 +14,11 @@ create table edges (
   -- Actual relationship.
   -- !! FROM_ID -> TO_ID form !!
   type text not null,
+  -- Confidence about relationship
+  confidence float not null,
+
+  -- Was relationship a fact or constructed with conversation context
+  implicit boolean not null,
 
   -- Metadata
   created_at timestamp with time zone not null default now(),
