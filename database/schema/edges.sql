@@ -24,8 +24,8 @@ create table edges (
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
 
-  constraint edges_check_entities with check (
+  constraint edges_check_entities check (
     from_id <> to_id
-  ),
+  )
 
 );
