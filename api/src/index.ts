@@ -19,6 +19,9 @@ const supabaseClient = createClient(
 
 app.post('/add_memories', zValidator('json', MemorySchema), async (ctx) => {
   const {memories, last_messages} = ctx.req.valid('json')
+
+  console.log(`Memories: ${memories}`)
+  console.log(`Last_messages: ${last_messages}`)
   // 1. insert memories to database
   const {error} = await supabaseClient
     .from('memories')
@@ -33,7 +36,7 @@ app.post('/add_memories', zValidator('json', MemorySchema), async (ctx) => {
 
 
 
-  return ctx.text('Hello Hono!')
+  return ctx.json({response: 'Worked'})
 })
 
 export default app

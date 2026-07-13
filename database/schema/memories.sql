@@ -7,3 +7,5 @@ create table memories (
   content text not null,
   created_at timestamp with time zone not null default now()
 );
+
+GRANT INSERT ON public.memories TO service_role;

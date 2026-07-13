@@ -29,3 +29,5 @@ create table edges (
   )
 
 );
+
+GRANT INSERT ON public.edges TO service_role;

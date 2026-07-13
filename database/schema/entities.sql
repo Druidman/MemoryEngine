@@ -10,3 +10,5 @@ create table entities (
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now()
 );
+
+GRANT INSERT ON public.entities TO service_role;
