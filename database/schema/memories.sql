@@ -8,4 +8,4 @@ create table memories (
   created_at timestamp with time zone not null default now()
 );
 
-GRANT INSERT ON public.memories TO service_role;
+GRANT ALL ON public.memories TO service_role;
