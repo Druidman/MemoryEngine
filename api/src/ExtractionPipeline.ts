@@ -21,7 +21,6 @@ export async function runExtractionPipeline(
 
   const results = await Promise.all(promises)
 
-  
   results.forEach((result)=>{
     console.log(JSON.parse(result))
   })
