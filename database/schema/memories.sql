@@ -5,6 +5,7 @@
 create table memories (
   id uuid primary key default gen_random_uuid(),
   content text not null,
+  container_id uuid not null references public.containers(id) on update cascade on delete cascade,
   created_at timestamp with time zone not null default now()
 );
 

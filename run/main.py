@@ -32,6 +32,7 @@ def genChatResponse(messages: list[dict]):
 
   return newMessages, response.get('content')
 
+def addToMemory(messages: list[dict]): pass
 
 messages = []
 
@@ -47,7 +48,12 @@ while message != "":
   # Generate response
   messages, response = genChatResponse(messages)
 
+  # Send to memory engine
+  addToMemory(messages)
+
   print(f"\nChat: {response[1]}")
+
+  
 
 
 print("\n\nCHAT ENDED\n\n")

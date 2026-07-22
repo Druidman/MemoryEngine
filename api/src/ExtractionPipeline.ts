@@ -1,28 +1,15 @@
+import { MessageType } from "."
 import { callExtractor } from "./callExtractorModel"
 
 export async function runExtractionPipeline(
-  data: {
-    id: string,
-    content: string
-  }[], 
-  last_messages: string[]
+  messages: MessageType[]
 ){
-  console.log('EEP started...')
+  console.log('Extraction started started...')
 
-  if (data.length == 0) return
+  if (messages.length == 0) return
 
-  // Entity extraction pipeline
-
+  // EXTRACT DATA WORTH SAVING
+  // First extract facts, preferences, suggestions 
   
-  const promises: Promise<any>[] = []
-  data.forEach((memory)=>{
-    promises.push(callExtractor(memory.content, last_messages))
-  })
-
-  const results = await Promise.all(promises)
-
-  results.forEach((result)=>{
-    console.log(JSON.parse(result))
-  })
 
 }
