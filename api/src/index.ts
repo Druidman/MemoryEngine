@@ -26,10 +26,19 @@ app.post('/add', zValidator('json', AddSchema), async (ctx) => {
 
   console.log(`New Messages: ${newMessages}`)
   // 1. check if session exist
-  const {data: session, error} = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
+  const {data: session, error: checkError} = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
 
-  if (error) return ctx.json({error: error.message}, 500)
+  if (checkError) return ctx.json({error: checkError.message}, 500)
   if (!session) return ctx.json({error: "Session does not exist!"}, 300)
+
+  // 2. Insert New Messages
+  const {error: insertError} = await supabaseClient.from('session_messages').insert(
+    newMessages.map((message)=>({
+      payload: message,
+      session_id: sessionId
+    }))
+  )
+  if (insertError) return ctx.json({error: insertError.message}, 500)
 
   // 2. Run background worker used for entity extraction and graph making 
   // FOR PoC we will just use standard fire-and-forget approach
