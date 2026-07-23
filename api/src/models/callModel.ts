@@ -1,6 +1,7 @@
 import { OpenRouter } from '@openrouter/sdk';
 import { ChatMessages } from '@openrouter/sdk/models';
 import * as z from 'zod'
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 const client = new OpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -24,13 +25,22 @@ export async function callModel<T>(
           ],
           model: model,
           
-          reasoning: {effort: "high"}
+          reasoning: {effort: "high"},
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              
+              strict: true,
+              schema: zodToJsonSchema(validation_schema, { target: "openApi3" }),
+            },
+          },
         }
       }
     );
     
     // Extract the assistant message with reasoning_details and save it to the response variable
-    const message = validation_schema.parse(completion.choices[0].message.content);
+    const raw = completion.choices[0].message.content as string;
+    const message = validation_schema.parse(JSON.parse(raw));
     const reasoning = completion.choices[0].message.reasoning;
 
     return {message: message as T, reasoning: reasoning ?? undefined}

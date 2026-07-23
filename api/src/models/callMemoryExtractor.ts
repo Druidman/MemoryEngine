@@ -45,8 +45,8 @@ Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
 const EXTRACTION_MODEL = process.env.MEMORY_EXTRACTION_MODEL ?? ""
 
 export const ExtractedMemorySchema = z.object({
-  type: z.string(),
-  content: z.literal(["fact", "preference", "event", "assistant"]),
+  content: z.string(),
+  type: z.literal(["fact", "preference", "event", "assistant"]),
   confidence: z.float32().min(0).max(1),
   supersedes_hint: z.uuid().optional().nullable(),
 })
@@ -77,7 +77,7 @@ export async function callMemoryExtractor(newMessages: ChatMessages[], previousS
 ${formatedMemories.length ? JSON.stringify(formatedMemories) : "None yet.\n"}
 
           ## New Messages
-          ${newMessages}
+          ${JSON.stringify(newMessages)}
 
           Extract memories now.
         `
@@ -87,8 +87,6 @@ ${formatedMemories.length ? JSON.stringify(formatedMemories) : "None yet.\n"}
     ExtractedMemoriesSchema,
     "callMemoryExtractor"
   )
-
-  console.log(result.message)
 
   return result.message
 

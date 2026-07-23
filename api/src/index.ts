@@ -24,7 +24,7 @@ const app = new Hono()
 app.post('/add', zValidator('json', AddSchema), async (ctx) => {
   const {newMessages, sessionId} = ctx.req.valid('json')
 
-  console.log(`New Messages: ${newMessages}`)
+  console.log(`New Messages: ${JSON.stringify(newMessages)}`)
   // 1. check if session exist
   const {data: session, error: checkError} = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
 

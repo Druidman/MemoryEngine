@@ -8,7 +8,7 @@ export async function runExtractionPipeline(
   messages: MessageType[],
   sessionId: string
 ){
-  console.log('Extraction started started...')
+  console.log('Extraction started...')
 
   if (messages.length == 0) return
 
@@ -22,6 +22,10 @@ export async function runExtractionPipeline(
   if (error) throw error
   // Now extract facts, preferences, suggestions 
   const extractedMemories = await callMemoryExtractor(messages, memories as Memory[])
+
+  console.log(extractedMemories)
+
+  // Now insert those memories into db
   
   
 
