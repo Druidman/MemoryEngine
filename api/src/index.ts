@@ -29,7 +29,7 @@ app.post('/add', zValidator('json', AddSchema), async (ctx) => {
   const {data: session, error: checkError} = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
 
   if (checkError) return ctx.json({error: checkError.message}, 500)
-  if (!session) return ctx.json({error: "Session does not exist!"}, 300)
+  if (!session) return ctx.json({error: "SessionId does not exist! You can create one via: `new_session` endpoint"}, 400)
 
   // 2. Insert New Messages
   const {error: insertError} = await supabaseClient.from('session_messages').insert(
