@@ -25,6 +25,8 @@ def genChatResponse(messages: list[dict]):
     })
   )
   response = response.json()
+  print(response)
+
   response = response['choices'][0]['message']
 
   newMessages = [
@@ -35,7 +37,6 @@ def genChatResponse(messages: list[dict]):
       "reasoning_details": response.get('reasoning_details')
     },
   ]
-
 
   return newMessages, response.get('content')
 
@@ -76,7 +77,6 @@ session_id = getSession()
   
 
 messages = []
-
 
 message = " "
 while message != "":

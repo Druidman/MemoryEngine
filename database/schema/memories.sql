@@ -7,6 +7,7 @@ create table memories (
   content text not null,
   type text,
   confidence float,
+  metadata_hints jsonb,
   session_id uuid references public.sessions(id) on update cascade on delete set null,
   container_id uuid not null references public.containers(id) on update cascade on delete cascade,
   created_at timestamp with time zone not null default now()

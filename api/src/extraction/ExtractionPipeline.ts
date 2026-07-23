@@ -6,7 +6,8 @@ import { callMemoryExtractor } from "../models/callMemoryExtractor"
 
 export async function runExtractionPipeline(
   messages: MessageType[],
-  sessionId: string
+  sessionId: string,
+  containerId: string
 ){
   console.log('Extraction started...')
 
@@ -26,6 +27,17 @@ export async function runExtractionPipeline(
   console.log(extractedMemories)
 
   // Now insert those memories into db
+  const {error: memoriesInsertError} = await supabaseClient
+    .from('memories')
+    .insert(extractedMemories.memories.map((memory)=>({
+      content: memory.content,
+      confidence: memory.confidence,
+      type: memory.type,
+      session_id: sessionId,
+      container_id: containerId,
+      metadata_hints: memory.supersedes_hint ? {supersedes: memory.supersedes_hint} : undefined
+    })))
+  if (memoriesInsertError) throw memoriesInsertError
   
   
 

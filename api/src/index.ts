@@ -20,7 +20,29 @@ export const AddSchema = z.object({
 export type AddType = z.infer<typeof AddSchema>
 
 const app = new Hono()
+async function getContainerId(){
+  const {data: container, error: containerError} = await supabaseClient
+    .from('containers')
+    .select('id')
+    .maybeSingle()
 
+  if (containerError) throw containerError
+
+  if (!container){
+    const {data: id, error: containerError} = await supabaseClient
+      .from('containers')
+      .insert({
+        tag: "TEST"
+      })
+      .select('id')
+      .single()
+    if (containerError) throw containerError
+
+    return id.id
+  }
+
+  return container.id
+}
 app.post('/add', zValidator('json', AddSchema), async (ctx) => {
   const {newMessages, sessionId} = ctx.req.valid('json')
 
@@ -42,7 +64,12 @@ app.post('/add', zValidator('json', AddSchema), async (ctx) => {
 
   // 2. Run background worker used for entity extraction and graph making 
   // FOR PoC we will just use standard fire-and-forget approach
-  runExtractionPipeline(newMessages, sessionId)
+  // TODO
+  // create/user first container
+  const containerId = await getContainerId()
+
+  
+  runExtractionPipeline(newMessages, sessionId, containerId)
 
 
   return ctx.json({error: null}, 200)

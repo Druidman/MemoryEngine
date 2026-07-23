@@ -16,7 +16,7 @@ export async function callModel<T>(
       {
         chatRequest: {
           stream: false,
-          messages: [
+          messages:
             {
               role: "system",
               content: sys_prompt
