@@ -20,16 +20,13 @@ export const AddSchema = z.object({
 export type AddType = z.infer<typeof AddSchema>
 
 const app = new Hono()
-async function getContainerId(){
-  const {data: container, error: containerError} = await supabaseClient
-    .from('containers')
-    .select('id')
-    .maybeSingle()
+async function getContainerId() {
+  const { data: container, error: containerError } = await supabaseClient.from('containers').select('id').maybeSingle()
 
   if (containerError) throw containerError
 
-  if (!container){
-    const {data: id, error: containerError} = await supabaseClient
+  if (!container) {
+    const { data: id, error: containerError } = await supabaseClient
       .from('containers')
       .insert({
         tag: "TEST"
@@ -44,23 +41,23 @@ async function getContainerId(){
   return container.id
 }
 app.post('/add', zValidator('json', AddSchema), async (ctx) => {
-  const {newMessages, sessionId} = ctx.req.valid('json')
+  const { newMessages, sessionId } = ctx.req.valid('json')
 
   console.log(`New Messages: ${JSON.stringify(newMessages)}`)
   // 1. check if session exist
-  const {data: session, error: checkError} = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
+  const { data: session, error: checkError } = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
 
-  if (checkError) return ctx.json({error: checkError.message}, 500)
-  if (!session) return ctx.json({error: "SessionId does not exist! You can create one via: `new_session` endpoint"}, 400)
+  if (checkError) return ctx.json({ error: checkError.message }, 500)
+  if (!session) return ctx.json({ error: "SessionId does not exist! You can create one via: `new_session` endpoint" }, 400)
 
   // 2. Insert New Messages
-  const {error: insertError} = await supabaseClient.from('session_messages').insert(
-    newMessages.map((message)=>({
+  const { error: insertError } = await supabaseClient.from('session_messages').insert(
+    newMessages.map((message) => ({
       payload: message,
       session_id: sessionId
     }))
   )
-  if (insertError) return ctx.json({error: insertError.message}, 500)
+  if (insertError) return ctx.json({ error: insertError.message }, 500)
 
   // 2. Run background worker used for entity extraction and graph making 
   // FOR PoC we will just use standard fire-and-forget approach
@@ -68,21 +65,21 @@ app.post('/add', zValidator('json', AddSchema), async (ctx) => {
   // create/user first container
   const containerId = await getContainerId()
 
-  
+
   runExtractionPipeline(newMessages, sessionId, containerId)
 
 
-  return ctx.json({error: null}, 200)
+  return ctx.json({ error: null }, 200)
 })
 
 app.get('/new_session', async (ctx) => {
-  
 
-  const {data: session, error} = await supabaseClient.from('sessions').insert({}).select('id').single()
 
-  if (error) return ctx.json({error: error.message}, 500)
+  const { data: session, error } = await supabaseClient.from('sessions').insert({}).select('id').single()
 
-  return ctx.json({error: null, session_id: session.id}, 200)
+  if (error) return ctx.json({ error: error.message }, 500)
+
+  return ctx.json({ error: null, session_id: session.id }, 200)
 })
 
 export default app

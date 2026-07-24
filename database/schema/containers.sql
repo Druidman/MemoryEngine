@@ -3,7 +3,7 @@ create table containers (
 
   tag varchar(500) not null,
   owner_id uuid not null references auth.users(id) on update cascade on delete cascade default auth.uid(),
-
+  
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now()
 
