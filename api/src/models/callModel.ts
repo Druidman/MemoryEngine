@@ -1,49 +1,69 @@
-import { OpenRouter } from '@openrouter/sdk';
-import { ChatMessages } from '@openrouter/sdk/models';
 import * as z from 'zod'
-import { zodToJsonSchema } from "zod-to-json-schema";
 
-const client = new OpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY,
-})
+export type ChatAssistantMessage = {
+
+    content?: string | null | undefined;
+    model?: string | undefined;
+
+    name?: string | undefined;
+
+    reasoning?: string | null | undefined;
+
+    refusal?: string | null | undefined;
+    role: "assistant";
+}
+export type ChatUserMessage = {
+  role: "user";
+  name?: string | undefined;
+  content?: string | null | undefined;
+}
+export type ChatMessages = ChatAssistantMessage | ChatUserMessage
+
+
 const MAX_RETRIES = 3
 export async function callModel<T>(
-  model: string, messages: ChatMessages[], sys_prompt: string, validation_schema: z.ZodObject, errorName: string, _retryNum?: number
+  model: string, messages: ChatMessages[], sys_prompt: string, 
+  validation_schema: z.ZodObject, 
+  errorName: string,
+   _retryNum?: number
 ) : Promise<{message: T, reasoning: string | undefined}>
 {
   try{
-    const completion = await client.chat.send(
-      {
-        chatRequest: {
-          stream: false,
-          messages:
-            {
-              role: "system",
-              content: sys_prompt
-            },
-            ...messages
-          ],
-          model: model,
-          
-          reasoning: {effort: "high"},
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              
-              strict: true,
-              schema: zodToJsonSchema(validation_schema, { target: "openApi3" }),
-            },
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stream: false,
+        messages: [
+          { role: "system", content: sys_prompt },
+          ...messages
+        ],
+        model: model,
+        reasoning: { effort: "high" },
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "schema",
+            strict: true,
+            schema: validation_schema.toJSONSchema(),
           },
-        }
-      }
-    );
-    
-    // Extract the assistant message with reasoning_details and save it to the response variable
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter error: ${response.status} ${await response.text()}`);
+    }
+
+    const completion = await response.json();
     const raw = completion.choices[0].message.content as string;
     const message = validation_schema.parse(JSON.parse(raw));
     const reasoning = completion.choices[0].message.reasoning;
 
-    return {message: message as T, reasoning: reasoning ?? undefined}
+    return { message: message as T, reasoning: reasoning ?? undefined };
   } catch(error){
     if (error instanceof z.ZodError){
       // retry if possible

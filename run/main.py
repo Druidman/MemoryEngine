@@ -19,7 +19,7 @@ def genChatResponse(messages: list[dict]):
       "Content-Type": "application/json",
     },
     data=json.dumps({
-      "model": model,
+      'model': model,
       "messages": messages,
       "reasoning": {"enabled": True}
     })

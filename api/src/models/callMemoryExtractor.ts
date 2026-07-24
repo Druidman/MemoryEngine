@@ -1,8 +1,7 @@
-import { ChatMessages } from "@openrouter/sdk/models";
 import { Memory } from "../database/memories";
 import { callModel } from "./callModel";
 import * as z from 'zod'
-
+import { ChatMessages } from "./callModel";
 
 const SYS_PROMPT =`You are a memory extraction engine. Your job is to extract meaningful, durable facts from a conversation and return them as structured JSON.
 
