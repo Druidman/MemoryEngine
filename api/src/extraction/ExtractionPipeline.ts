@@ -18,7 +18,7 @@ export async function runExtractionPipeline(
   const {data: memories, error} = await supabaseClient
     .from('memories')
     .select("*")
-    .eq('session_id', sessionId)
+    .eq('session_id', sessionId) // single session
   
   if (error) throw error
   // Now extract facts, preferences, suggestions 
@@ -40,7 +40,30 @@ export async function runExtractionPipeline(
 
   // EXTRACT ENTITIES
 
-  
+  // First get known entities
+  const {data: entities, error: entitiesError} = await supabaseClient
+    .from('entities')
+    .select(`
+      canonical_name,
+      aliases,
+      type
+    `)
+    .eq('session_id', sessionId) // For single session
+    .order('updated_at', {ascending: false}) // newest first
+    .limit(50) 
+    // This way we get top 50 most recently used entities
+
+  if (entitiesError) throw entitiesError
+
+  // Now for each memory we need to fire extraction
+  // ...
+
+  // Collect extraction results and pass them to `entity resolver`
+  // ...
+
+  // Insert entities to database
+
+
   
 
 }
