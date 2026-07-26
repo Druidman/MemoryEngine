@@ -11,6 +11,7 @@ model = os.environ.get("CHAT_MODEL")
 if not model or not token:
   print('SPECIFY OPEN_ROUTER_API_KEY and CHAT_MODEL env variables in .env file')
   exit()
+
 def genChatResponse(messages: list[dict]):
   response = requests.post(
     url="https://openrouter.ai/api/v1/chat/completions",
@@ -25,7 +26,7 @@ def genChatResponse(messages: list[dict]):
     })
   )
   response = response.json()
-  print(response)
+  # print(response)
 
   response = response['choices'][0]['message']
 
