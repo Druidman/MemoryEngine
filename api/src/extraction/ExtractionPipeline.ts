@@ -24,8 +24,6 @@ export async function runExtractionPipeline(
   // Now extract facts, preferences, suggestions 
   const extractedMemories = await callMemoryExtractor(messages, memories as Memory[])
 
-  console.log(extractedMemories)
-
   // Now insert those memories into db
   const {error: memoriesInsertError} = await supabaseClient
     .from('memories')
@@ -38,6 +36,10 @@ export async function runExtractionPipeline(
       metadata_hints: memory.supersedes_hint ? {supersedes: memory.supersedes_hint} : undefined
     })))
   if (memoriesInsertError) throw memoriesInsertError
+
+
+  // EXTRACT ENTITIES
+
   
   
 
