@@ -7,9 +7,10 @@ create table entities (
   aliases text[] not null default ARRAY[]::text[],
   embedding vector(1024) not null,
   container_id uuid not null references public.containers(id) on update cascade on delete cascade,
+  session_id uuid references public.sessions(id) on update cascade on delete set null,
 
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now()
 );
 
-GRANT INSERT ON public.entities TO service_role;
+GRANT ALL ON public.entities TO service_role;

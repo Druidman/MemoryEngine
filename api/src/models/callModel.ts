@@ -29,6 +29,7 @@ export async function callModel<T>(
 ) : Promise<{message: T, reasoning: string | undefined}>
 {
   try{
+    console.log(messages)
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -63,6 +64,7 @@ export async function callModel<T>(
     const message = validation_schema.parse(JSON.parse(raw));
     const reasoning = completion.choices[0].message.reasoning;
 
+    console.log(message)
     return { message: message as T, reasoning: reasoning ?? undefined };
   } catch(error){
     if (error instanceof z.ZodError){

@@ -1,6 +1,7 @@
 import { MessageType } from ".."
 import { Memory } from "../database/memories"
 import { supabaseClient } from "../database/supabaseClient"
+import { callEntityExtractor } from "../models/callEntityExtractor"
 import { callMemoryExtractor } from "../models/callMemoryExtractor"
 
 
@@ -57,6 +58,13 @@ export async function runExtractionPipeline(
 
   // Now for each memory we need to fire extraction
   // ...
+  const result = await Promise.all(extractedMemories.memories.map(async (memory)=>{
+    console.log(memory.content)
+    return await callEntityExtractor(memory.content, entities)
+  }))
+
+  console.log(result)
+
 
   // Collect extraction results and pass them to `entity resolver`
   // ...
