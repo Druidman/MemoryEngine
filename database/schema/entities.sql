@@ -5,7 +5,7 @@ create table entities (
   type text not null,
   confidence float not null,
   aliases text[] not null default ARRAY[]::text[],
-  embedding vector(1024) not null,
+  embedding vector(1024),
   container_id uuid not null references public.containers(id) on update cascade on delete cascade,
   session_id uuid references public.sessions(id) on update cascade on delete set null,
 

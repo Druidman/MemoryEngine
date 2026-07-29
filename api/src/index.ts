@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { logger } from 'hono/logger'
 
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
@@ -20,6 +21,7 @@ export const AddSchema = z.object({
 export type AddType = z.infer<typeof AddSchema>
 
 const app = new Hono()
+app.use(logger())
 async function getContainerId() {
   const { data: container, error: containerError } = await supabaseClient.from('containers').select('id').maybeSingle()
 
@@ -43,7 +45,6 @@ async function getContainerId() {
 app.post('/add', zValidator('json', AddSchema), async (ctx) => {
   const { newMessages, sessionId } = ctx.req.valid('json')
 
-  console.log(`New Messages: ${JSON.stringify(newMessages)}`)
   // 1. check if session exist
   const { data: session, error: checkError } = await supabaseClient.from('sessions').select('*').eq('id', sessionId).maybeSingle()
 
@@ -73,8 +74,6 @@ app.post('/add', zValidator('json', AddSchema), async (ctx) => {
 })
 
 app.get('/new_session', async (ctx) => {
-
-
   const { data: session, error } = await supabaseClient.from('sessions').insert({}).select('id').single()
 
   if (error) return ctx.json({ error: error.message }, 500)

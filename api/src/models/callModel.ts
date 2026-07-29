@@ -29,7 +29,7 @@ export async function callModel<T>(
 ) : Promise<{message: T, reasoning: string | undefined}>
 {
   try{
-    console.log(messages)
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -61,20 +61,23 @@ export async function callModel<T>(
 
     const completion = await response.json();
     const raw = completion.choices[0].message.content as string;
+    
+ 
     const message = validation_schema.parse(JSON.parse(raw));
     const reasoning = completion.choices[0].message.reasoning;
 
-    console.log(message)
+
     return { message: message as T, reasoning: reasoning ?? undefined };
   } catch(error){
-    if (error instanceof z.ZodError){
-      // retry if possible
-      if ((_retryNum ?? 0) >= MAX_RETRIES){
-        throw new Error(`Maximum retries hit(${MAX_RETRIES}) for model: ${model} in action: ${errorName}`)
-      }
-      return await callModel<T>(model, messages, sys_prompt, validation_schema, errorName, (_retryNum ?? 0) + 1)
+    if (!(error instanceof z.ZodError)){
+      console.log(`[CALL_MODEL_F]: UNKNOWN ERROR: ${error}`)
     }
-    throw error
+    // retry if possible
+    if ((_retryNum ?? 0) >= MAX_RETRIES){
+      throw new Error(`Maximum retries hit(${MAX_RETRIES}) for model: ${model} in action: ${errorName}`)
+    }
+    console.log(`[CALL_MODEL_F]: Performing ${_retryNum} retry on: ${errorName}`)
+    return await callModel<T>(model, messages, sys_prompt, validation_schema, errorName, (_retryNum ?? 0) + 1)
   }
   
 }

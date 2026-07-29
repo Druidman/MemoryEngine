@@ -4,13 +4,17 @@ import { supabaseClient } from "../database/supabaseClient"
 import { callEntityExtractor } from "../models/callEntityExtractor"
 import { callMemoryExtractor } from "../models/callMemoryExtractor"
 
+function logExtractionPipeline(...messages: any[]){
+  console.log(`[EXTRACTION_PIPELINE]: `, ...messages)
+
+}
 
 export async function runExtractionPipeline(
   messages: MessageType[],
   sessionId: string,
   containerId: string
 ){
-  console.log('Extraction started...')
+  logExtractionPipeline("Started")
 
   if (messages.length == 0) return
 
@@ -22,8 +26,12 @@ export async function runExtractionPipeline(
     .eq('session_id', sessionId) // single session
   
   if (error) throw error
+  logExtractionPipeline("Fetched session memories")
+
   // Now extract facts, preferences, suggestions 
   const extractedMemories = await callMemoryExtractor(messages, memories as Memory[])
+
+  logExtractionPipeline("Extracted memories", extractedMemories)
 
   // Now insert those memories into db
   const {error: memoriesInsertError} = await supabaseClient
@@ -38,6 +46,12 @@ export async function runExtractionPipeline(
     })))
   if (memoriesInsertError) throw memoriesInsertError
 
+  logExtractionPipeline("Inserted memories")
+
+  const updatedExtractedMemories = extractedMemories.memories.map((memory)=>{
+    return {...memory, created_at: new Date().toISOString()}
+  })
+
 
   // EXTRACT ENTITIES
 
@@ -49,21 +63,28 @@ export async function runExtractionPipeline(
       aliases,
       type
     `)
-    .eq('session_id', sessionId) // For single session
     .order('updated_at', {ascending: false}) // newest first
     .limit(50) 
-    // This way we get top 50 most recently used entities
+    // This way we get top 50(k) most recently used entities
 
   if (entitiesError) throw entitiesError
 
+  logExtractionPipeline("Fetched known entities", entities)
+
   // Now for each memory we need to fire extraction
-  // ...
-  const result = await Promise.all(extractedMemories.memories.map(async (memory)=>{
-    console.log(memory.content)
-    return await callEntityExtractor(memory.content, entities)
+  const result = await Promise.all(updatedExtractedMemories.map(async (memory, i)=>{
+    // console.log(memory)
+    logExtractionPipeline(`Extracting entities from memory n: ${i + 1}`)
+    const result = await callEntityExtractor(memory, entities)
+    logExtractionPipeline(`[ENTITY_EXTRACTOR_${i+1}] Extracted entities: `, result)
+
   }))
 
-  console.log(result)
+  logExtractionPipeline(`Extracted entities`)
+
+  logExtractionPipeline(`Entities: ${JSON.stringify(result)}`)
+
+  // console.log(result)
 
 
   // Collect extraction results and pass them to `entity resolver`

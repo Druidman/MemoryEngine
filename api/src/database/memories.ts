@@ -10,5 +10,6 @@ export const MemorySchema = z.object({
   created_at: z.iso.datetime()
 })
 
+
 export type Memory = z.infer<typeof MemorySchema>
 
