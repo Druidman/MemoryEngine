@@ -1,9 +1,15 @@
+import z from "zod"
 import { MessageType } from ".."
-import { EntityType } from "../database/entities"
 import { Memory } from "../database/memories"
 import { supabaseClient } from "../database/supabaseClient"
-import { callEntityExtractor, ExtractedEntitiesType } from "../models/callEntityExtractor"
+import { callEntityExtractor, ExtractedEntitiesSchema, ExtractedEntitiesType, ExtractedEntityType } from "../models/callEntityExtractor"
 import { callMemoryExtractor } from "../models/callMemoryExtractor"
+
+
+export const ExtractedEntitiesWithMemoryIdSchema = ExtractedEntitiesSchema.extend({
+  memory_id: z.uuid()
+})
+export type ExtractedEntitiesWithMemoryIdType = z.infer<typeof ExtractedEntitiesWithMemoryIdSchema>
 
 function logExtractionPipeline(...messages: any[]){
   console.log(`[EXTRACTION_PIPELINE]: `, ...messages)
@@ -88,17 +94,25 @@ export async function runExtractionPipeline(
 
 }
 
+function checkForDuplicatesInMemoryScope(extractionResult: ExtractedEntitiesWithMemoryIdType[]){
+  extractionResult.forEach((singleResult)=>{
+    const entityMap: Record<string, ExtractedEntityType> = {}
+  
+    singleResult.entities.forEach((entity)=>{
+      const found = Object.keys(entityMap).find((val) => val == entity.canonical_name + entity.type)
+      if (found){
+        logExtractionPipeline(`[UNEXPECTED_ERROR]: Found the same entities in a single memory. `, entityMap[found], ' and ', entity)
+      }
+      else {
+        entityMap[entity.canonical_name + entity.type] = entity
+      }
+    })
+  })
+}
 
-async function entityResolver(extractionResult: (ExtractedEntitiesType & {memory_id: string})[]){
-  // Deduplicate entities
-  // L1, L2, L3 process
-
-  // L1:
-  // 1. deduplicate in result itself (merge aliases and dedup canonical_names)
-  // 2. Check if exists in db.
-
-
-  // L1 Implementation
-  const entityMap: {[x in string]: ExtractedEntitiesType} = {}
-  // Upsert entities
+async function entityResolver(extractionResult: ExtractedEntitiesWithMemoryIdType[]){ 
+  // [TODO] We assume that there cannot be an entity with the same name and type in a single memory
+  // For that reason first let's check if something like this did happen. If so log it.
+  checkForDuplicatesInMemoryScope(extractionResult)
+  
 }
