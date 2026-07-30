@@ -45,7 +45,7 @@ const EXTRACTION_MODEL = process.env.MEMORY_EXTRACTION_MODEL ?? ""
 
 export const ExtractedMemorySchema = z.object({
   content: z.string(),
-  type: z.literal(["fact", "preference", "event", "assistant"]),
+  type: z.string(),
   confidence: z.float32().min(0).max(1),
   supersedes_hint: z.uuid().optional().nullable(),
 })
