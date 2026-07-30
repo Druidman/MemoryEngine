@@ -2,14 +2,26 @@ import z from "zod"
 import { MessageType } from ".."
 import { Memory } from "../database/memories"
 import { supabaseClient } from "../database/supabaseClient"
-import { callEntityExtractor, ExtractedEntitiesSchema, ExtractedEntitiesType, ExtractedEntityType } from "../models/callEntityExtractor"
+import { callEntityExtractor, ExtractedEntitiesWithRelationsSchema, ExtractedEntitiesWithRelationsType, ExtractedEntityRelationSchema, ExtractedEntitySchema, ExtractedEntityType } from "../models/callEntityExtractor"
 import { callMemoryExtractor } from "../models/callMemoryExtractor"
 
 
-export const ExtractedEntitiesWithMemoryIdSchema = ExtractedEntitiesSchema.extend({
+export const ExtractedEntitiesWithRelationsWithMemoryIdSchema = ExtractedEntitiesWithRelationsSchema.extend({
+  memory_id: z.uuid()
+})
+export type ExtractedEntitiesWithRelationsWithMemoryIdType = z.infer<typeof ExtractedEntitiesWithRelationsWithMemoryIdSchema>
+
+export const ExtractedEntitiesWithMemoryIdSchema = z.object({
+  entities: ExtractedEntitySchema.array(),
   memory_id: z.uuid()
 })
 export type ExtractedEntitiesWithMemoryIdType = z.infer<typeof ExtractedEntitiesWithMemoryIdSchema>
+
+export const ExtractedEntityRelationsWithMemoryIdSchema = z.object({
+  relations: ExtractedEntityRelationSchema.array(),
+  memory_id: z.uuid()
+})
+export type ExtractedEntityRelationsWithMemoryIdType = z.infer<typeof ExtractedEntityRelationsWithMemoryIdSchema>
 
 function logExtractionPipeline(...messages: any[]){
   console.log(`[EXTRACTION_PIPELINE]: `, ...messages)
@@ -78,7 +90,7 @@ export async function runExtractionPipeline(
   logExtractionPipeline("Fetched known entities", knownEntities)
 
   // Now for each memory we need to fire extraction
-  const entityExtractionResult: (ExtractedEntitiesType & {memory_id: string})[] = await Promise.all(insertedMemories.map(async (memory, i)=>{
+  const entityExtractionResult: (ExtractedEntitiesWithRelationsType & {memory_id: string})[] = await Promise.all(insertedMemories.map(async (memory, i)=>{
     // console.log(memory)
     logExtractionPipeline(`Extracting entities from memory n: ${i + 1}`)
     const singleExtractionResult = await callEntityExtractor(memory, knownEntities)
@@ -94,7 +106,7 @@ export async function runExtractionPipeline(
 
 }
 
-function checkForDuplicatesInMemoryScope(extractionResult: ExtractedEntitiesWithMemoryIdType[]){
+function checkForDuplicatesInMemoryScope(extractionResult: ExtractedEntitiesWithRelationsWithMemoryIdType[]){
   extractionResult.forEach((singleResult)=>{
     const entityMap: Record<string, ExtractedEntityType> = {}
   
@@ -110,9 +122,116 @@ function checkForDuplicatesInMemoryScope(extractionResult: ExtractedEntitiesWith
   })
 }
 
-async function entityResolver(extractionResult: ExtractedEntitiesWithMemoryIdType[]){ 
+function mergeEntityWithMention(baseEntity: ExtractedEntityWithMentionsType, candidate: ExtractedEntityWithMemoryIdType){
+  const mergedEntity = baseEntity
+  // merge two results
+  // - append new aliases
+  // - append new properties
+  // - calculate new confidence
+
+
+  // Append new aliases
+  candidate.aliases.forEach((alias)=>{
+    if (mergedEntity.aliases.find((val)=>val===alias)){
+      return // skip
+    }
+    mergedEntity.aliases.push(alias)
+  })
+
+  // Append new properties
+  if (mergedEntity?.properties){
+
+    Object.keys(candidate?.properties ?? {}).forEach((key)=>{
+      if (key in mergedEntity.properties!){
+        // Confidence check
+        if (mergedEntity.confidence < candidate.confidence){
+          mergedEntity.properties![key] = candidate.properties![key]
+        }
+      }
+      else {
+        mergedEntity.properties![key] = candidate.properties![key]
+      }
+    })
+
+  } else {
+    mergedEntity.properties = candidate.properties
+  }
+
+  // Calculate new confidence
+  // Formula: 1 - SOP[ 1 - i_c ]
+  // Sum of product
+  // Xd
+  const confidence = 1 - [...baseEntity.mentions, candidate].reduce((total, curr)=>{
+    return total * (1 - curr.confidence)
+  }, 1)
+
+  mergedEntity.confidence = confidence
+
+  return mergedEntity
+
+}
+
+export const ExtractedEntityWithMemoryIdSchema = ExtractedEntitySchema.extend({memory_id: z.uuid()})
+export type ExtractedEntityWithMemoryIdType = z.infer<typeof ExtractedEntityWithMemoryIdSchema>
+
+export const ExtractedEntityWithMentionsSchema = ExtractedEntitySchema.extend({
+  mentions: ExtractedEntityWithMemoryIdSchema.omit({type: true, canonical_name: true}).array()
+})
+export type ExtractedEntityWithMentionsType = z.infer<typeof ExtractedEntityWithMentionsSchema>
+
+
+function deduplicateEntitiesInExtractionScope(extractedEntities: ExtractedEntitiesWithMemoryIdType[]){
+  // key is canon_name + type
+  const entities: {[x in string]: ExtractedEntityWithMentionsType} = {}
+
+  extractedEntities.forEach((entry)=>{
+    entry.entities.forEach((entity)=>{
+      const idName = entity.canonical_name + entity.type
+
+      if (idName in entities){
+        // key exists
+        // we need to merge it
+        entities[idName] = mergeEntityWithMention(entities[idName], {...entity, memory_id: entry.memory_id})
+      }
+      else {
+        // add new entry
+        entities[idName] = {
+          ...entity,
+          mentions: [{...entity, memory_id: entry.memory_id}]
+        }
+      }
+    })
+  })
+
+  return Object.values(entities)
+}
+
+function deduplicateRelationsInExtractionScope(extractedRelations: ExtractedEntityRelationsWithMemoryIdType[]){
+  // Since these functions are handling direct duplicates we will skip this implementation as it is VERY uncommon to happen
+  // What is common to happen is indirect duplicate however we will not be handling that here
+  return extractedRelations.flatMap((entry)=>{
+    return entry.relations.map((relation)=>({
+      ...relation,
+      memory_id: entry.memory_id
+    }))
+  })
+}
+
+async function entityResolver(extractionResult: ExtractedEntitiesWithRelationsWithMemoryIdType[]){ 
   // [TODO] We assume that there cannot be an entity with the same name and type in a single memory
   // For that reason first let's check if something like this did happen. If so log it.
   checkForDuplicatesInMemoryScope(extractionResult)
+
+  const extractedRelations = extractionResult.map((res)=>({
+    relations: res.relations,
+    memory_id: res.memory_id
+  }))
+  const extractedEntities: ExtractedEntitiesWithMemoryIdType[] = extractionResult.map((res)=>({
+    entities: res.entities,
+    memory_id: res.memory_id
+  }))
+
+  const deduplicatedExtractedEntities  = deduplicateEntitiesInExtractionScope(extractedEntities)
+  const deduplicatedExtractedRelations = deduplicateRelationsInExtractionScope(extractedRelations)
   
 }

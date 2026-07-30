@@ -128,18 +128,18 @@ export const ExtractedEntityRelationSchema = z.object({
 
 export type ExtractedEntityRelationType = z.infer<typeof ExtractedEntityRelationSchema>
 
-export const ExtractedEntitiesSchema = z.object({
+export const ExtractedEntitiesWithRelationsSchema = z.object({
   entities: ExtractedEntitySchema.array(),
   relations: ExtractedEntityRelationSchema.array()
 })
-export type ExtractedEntitiesType = z.infer<typeof ExtractedEntitiesSchema>
+export type ExtractedEntitiesWithRelationsType = z.infer<typeof ExtractedEntitiesWithRelationsSchema>
 
 
 export async function callEntityExtractor(memory: ExtractedMemoryWithDateType, known_entities: EntityRepresentationType[])
-: Promise<ExtractedEntitiesType>{
+: Promise<ExtractedEntitiesWithRelationsType>{
   
   // Now call the model
-  const result = await callModel<ExtractedEntitiesType>(
+  const result = await callModel<ExtractedEntitiesWithRelationsType>(
     EXTRACTION_MODEL, 
     [
       {
@@ -159,7 +159,7 @@ export async function callEntityExtractor(memory: ExtractedMemoryWithDateType, k
       }
     ],
     SYS_PROMPT,
-    ExtractedEntitiesSchema,
+    ExtractedEntitiesWithRelationsSchema,
     "callEntityExtractor"
   )
 
