@@ -162,8 +162,8 @@ function checkForDuplicatesInMemoryScope(
 }
 
 function mergeEntityWithMention(
-  baseEntity: ExtractedEntityWithMentionsType,
-  candidate: ExtractedEntityWithMemoryIdType,
+  baseEntity: MappedExtractedEntityWithMentionsType,
+  candidate: MappedExtractedEntityType,
 ) {
   const mergedEntity = baseEntity;
   // merge two results
@@ -217,76 +217,106 @@ export type ExtractedEntityWithMemoryIdType = z.infer<
   typeof ExtractedEntityWithMemoryIdSchema
 >;
 
-export const ExtractedEntityRelationWithMemoryIdSchema = ExtractedEntityRelationSchema.extend({
-  memory_id: z.uuid(),
-});
+export const ExtractedEntityRelationWithMemoryIdSchema =
+  ExtractedEntityRelationSchema.extend({
+    memory_id: z.uuid(),
+  });
 export type ExtractedEntityRelationWithMemoryIdType = z.infer<
   typeof ExtractedEntityRelationWithMemoryIdSchema
 >;
 
-export const ExtractedEntityWithMentionsSchema = ExtractedEntitySchema.extend({
-  mentions: ExtractedEntityWithMemoryIdSchema.omit({
-    type: true,
-    canonical_name: true,
-  }).array(),
-});
-export type ExtractedEntityWithMentionsType = z.infer<
-  typeof ExtractedEntityWithMentionsSchema
+export const MappedExtractedEntitySchema =
+  ExtractedEntityWithMemoryIdSchema.extend({
+    local_id: z.uuid(),
+  });
+export type MappedExtractedEntityType = z.infer<
+  typeof MappedExtractedEntitySchema
 >;
 
-export const ExtractedEntityWithMentionsAndRefSchema =
-  ExtractedEntityWithMentionsSchema.extend({
+export const MappedExtractedEntityRelationSchema =
+  ExtractedEntityRelationWithMemoryIdSchema.extend({
+    local_id: z.uuid(),
+  })
+    .omit({
+      object: true,
+      subject: true,
+    })
+    .extend({
+      local_subject_id: z.uuid().or(z.literal(["USER"])),
+      local_object_id: z.uuid().or(z.literal(["USER"])),
+    });
+export type MappedExtractedEntityRelationType = z.infer<
+  typeof MappedExtractedEntityRelationSchema
+>;
+
+export const MappedMemoryEntitiesWithRelationsSchema = z.object({
+  entities: MappedExtractedEntitySchema.array(),
+  relations: MappedExtractedEntityRelationSchema.array(),
+});
+export type MappedMemoryEntitiesWithRelationsType = z.infer<
+  typeof MappedMemoryEntitiesWithRelationsSchema
+>;
+
+export const MappedExtractedEntityWithMentionsSchema =
+  MappedExtractedEntitySchema.extend({
+    mentions: MappedExtractedEntitySchema.omit({
+      type: true,
+      canonical_name: true,
+    }).array(),
+  });
+export type MappedExtractedEntityWithMentionsType = z.infer<
+  typeof MappedExtractedEntityWithMentionsSchema
+>;
+
+export const MappedExtractedEntityWithMentionsAndRefSchema =
+  MappedExtractedEntityWithMentionsSchema.extend({
     ref_id: z.uuid().optional(), // id of reference entity from database
   });
-export type ExtractedEntityWithMentionsAndRefType = z.infer<
-  typeof ExtractedEntityWithMentionsAndRefSchema
+export type MappedExtractedEntityWithMentionsAndRefType = z.infer<
+  typeof MappedExtractedEntityWithMentionsAndRefSchema
 >;
 
 function deduplicateEntitiesInExtractionScope(
-  extractedEntities: ExtractedEntitiesWithMemoryIdType[],
-): ExtractedEntityWithMentionsType[] {
+  mappedExtractedEntities: MappedExtractedEntityType[],
+): MappedExtractedEntityWithMentionsType[] {
   // key is canon_name + type
-  const entities: { [x in string]: ExtractedEntityWithMentionsType } = {};
+  const entities: { [x in string]: MappedExtractedEntityWithMentionsType } = {};
 
-  extractedEntities.forEach((entry) => {
-    entry.entities.forEach((entity) => {
-      const idName = entity.canonical_name + entity.type;
+  mappedExtractedEntities.forEach((entity) => {
+    const idName = entity.canonical_name + entity.type;
 
-      if (idName in entities) {
-        // key exists
-        // we need to merge it
-        entities[idName] = mergeEntityWithMention(entities[idName], {
-          ...entity,
-          memory_id: entry.memory_id,
-        });
-      } else {
-        // add new entry
-        entities[idName] = {
-          ...entity,
-          mentions: [{ ...entity, memory_id: entry.memory_id }],
-        };
-      }
-    });
+    if (idName in entities) {
+      // key exists
+      // we need to merge it
+      entities[idName] = mergeEntityWithMention(entities[idName], {
+        ...entity,
+        memory_id: entity.memory_id,
+      });
+    } else {
+      // add new entry
+      entities[idName] = {
+        ...entity,
+        mentions: [{ ...entity, memory_id: entity.memory_id }],
+      };
+    }
   });
 
   return Object.values(entities);
 }
 
 function deduplicateRelationsInExtractionScope(
-  extractedRelations: ExtractedEntityRelationsWithMemoryIdType[],
+  extractedRelations: MappedExtractedEntityRelationType[],
 ) {
   // Since these functions are handling direct duplicates we will skip this implementation as it is VERY uncommon to happen
   // What is common to happen is indirect duplicate however we will not be handling that here
-  return extractedRelations.flatMap((entry) => {
-    return entry.relations.map((relation) => ({
-      ...relation,
-      memory_id: entry.memory_id,
-    }));
-  });
+  return extractedRelations.flatMap((relation) => ({
+    ...relation,
+    memory_id: relation.memory_id,
+  }));
 }
 
 async function assignExternalRefToEntity(
-  entity: ExtractedEntityWithMentionsType,
+  entity: MappedExtractedEntityWithMentionsType,
 ): Promise<string | null> {
   // call database to find candidate with the same (canonical_name or aliasMatch) and type.
   // !! THIS IS EXACT REFERENCE FINDER NOT A POSSIBILITY MERGER !!
@@ -308,8 +338,8 @@ async function assignExternalRefToEntity(
 }
 
 async function assignExternalRefsToEntities(
-  entities: ExtractedEntityWithMentionsType[],
-): Promise<ExtractedEntityWithMentionsAndRefType[]> {
+  entities: MappedExtractedEntityWithMentionsType[],
+): Promise<MappedExtractedEntityWithMentionsAndRefType[]> {
   return await Promise.all(
     entities.map(async (entity) => {
       const externalRef = await assignExternalRefToEntity(entity);
@@ -318,77 +348,69 @@ async function assignExternalRefsToEntities(
   );
 }
 
-export const MappedExtractedEntitySchema = ExtractedEntityWithMemoryIdSchema.extend({
-  local_id: z.uuid()
-})
-export type MappedExtractedEntityType = z.infer<typeof MappedExtractedEntitySchema>
+function assignLocalIdsToEntityExtraction(
+  extractionResult: EntityExtractorResultWithMemoryIdType[],
+): MappedMemoryEntitiesWithRelationsType {
+  const mappedData = extractionResult.map((memoryExtraction) => {
+    const mappedEntities: MappedExtractedEntityType[] =
+      memoryExtraction.entities.flatMap((entity) => {
+        // user entity filter
+        if (entity.type == "USER") {
+          return [];
+        }
 
-export const MappedExtractedEntityRelationSchema = ExtractedEntityRelationWithMemoryIdSchema.extend({
-  local_id: z.uuid(),
-}).omit({
-  object: true,
-  subject: true,
-}).extend({
-  local_subject_id: z.uuid().or(z.literal(['USER'])),
-  local_object_id: z.uuid().or(z.literal(['USER']))
-})
-export type MappedExtractedEntityRelationType = z.infer<typeof MappedExtractedEntityRelationSchema>
+        return [
+          {
+            ...entity,
+            local_id: crypto.randomUUID(),
+            memory_id: memoryExtraction.memory_id,
+          },
+        ];
+      });
+    const mappedRelations: MappedExtractedEntityRelationType[] =
+      memoryExtraction.relations.map((relation) => {
+        const { subject, object, ...rest } = relation;
+        const foundSubject = mappedEntities.find(
+          (entity) =>
+            entity.canonical_name == subject.canonical_name &&
+            entity.type == subject.type,
+        );
+        const foundObject = mappedEntities.find(
+          (entity) =>
+            entity.canonical_name == object.canonical_name &&
+            entity.type == object.type,
+        );
 
-export const MappedMemoryEntitiesWithRelationsSchema = z.object({
-  entities: MappedExtractedEntitySchema.array(),
-  relations: MappedExtractedEntityRelationSchema.array()
-})
+        if (
+          (!foundSubject && subject.type != "USER") ||
+          (!foundObject && object.type != "USER")
+        ) {
+          const message = `[assignLocalIdsToEntityExtraction]: ${
+            !foundSubject && !foundObject
+              ? "Subject and Object"
+              : !foundSubject
+                ? "Subject"
+                : "Object"
+          } not found in mappedEntities array. S/O`;
+          logExtractionPipeline(message, subject, object);
+          throw new Error(message);
+        }
 
-export type MappedMemoryEntitiesWithRelationsType = z.infer<typeof MappedMemoryEntitiesWithRelationsSchema>
-
-
-function assignLocalIdsToEntityExtraction(extractionResult: EntityExtractorResultWithMemoryIdType[]) : MappedMemoryEntitiesWithRelationsType{
-  const mappedData = extractionResult.map((memoryExtraction)=>{
-    const mappedEntities: MappedExtractedEntityType[] = memoryExtraction.entities.flatMap((entity)=>{
-      // user entity filter
-      if (entity.type == 'USER'){
-        return []
-      }
-
-      return [{...entity, local_id: crypto.randomUUID(), memory_id: memoryExtraction.memory_id}]
-    })
-    const mappedRelations: MappedExtractedEntityRelationType[] = memoryExtraction.relations.map((relation)=>{
-      const {subject, object, ...rest} = relation
-      const foundSubject = mappedEntities.find((entity)=>( 
-        entity.canonical_name == subject.canonical_name &&
-        entity.type == subject.type
-      ))
-      const foundObject = mappedEntities.find((entity)=>( 
-        entity.canonical_name == object.canonical_name &&
-        entity.type == object.type
-      ))
-
-      if ((!foundSubject && subject.type != 'USER') || (!foundObject && object.type != 'USER')){
-        const message = `[assignLocalIdsToEntityExtraction]: ${
-          !foundSubject && !foundObject ? 
-            "Subject and Object" : 
-              !foundSubject ? 'Subject' : 'Object'
-        } not found in mappedEntities array. S/O`
-        logExtractionPipeline(message, subject, object)
-        throw new Error(message)
-      }
-      
-      return {
-        ...rest,
-        local_id: crypto.randomUUID(),
-        local_subject_id: foundSubject?.local_id ?? 'USER',
-        local_object_id: foundObject?.local_id ?? 'USER',
-        memory_id: memoryExtraction.memory_id
-      }
-    })
-    return {entities: mappedEntities, relations: mappedRelations}
-  })
+        return {
+          ...rest,
+          local_id: crypto.randomUUID(),
+          local_subject_id: foundSubject?.local_id ?? "USER",
+          local_object_id: foundObject?.local_id ?? "USER",
+          memory_id: memoryExtraction.memory_id,
+        };
+      });
+    return { entities: mappedEntities, relations: mappedRelations };
+  });
 
   return {
-    entities: mappedData.flatMap((entry)=>entry.entities),
-    relations: mappedData.flatMap((entry)=>entry.relations)
-  }
-
+    entities: mappedData.flatMap((entry) => entry.entities),
+    relations: mappedData.flatMap((entry) => entry.relations),
+  };
 }
 
 async function entityResolver(
@@ -401,32 +423,21 @@ async function entityResolver(
 
   // Step 0 is assigning unique "local ids" to entities and changing relations from using
   // subject/object: name -> "local id"
-  
 
-  const mappedExtractionData = assignLocalIdsToEntityExtraction(extractionResult);
-
-  
-
-  const extractedRelations = extractionResult.map((res) => ({
-    relations: res.relations,
-    memory_id: res.memory_id,
-  }));
-  const extractedEntities: ExtractedEntitiesWithMemoryIdType[] =
-    extractionResult.map((res) => ({
-      entities: res.entities,
-      memory_id: res.memory_id,
-    }));
+  const mappedExtractionData =
+    assignLocalIdsToEntityExtraction(extractionResult);
 
   // Internal Deduplication
-  const deduplicatedExtractedEntities =
-    deduplicateEntitiesInExtractionScope(extractedEntities);
-  const deduplicatedExtractedRelations =
-    deduplicateRelationsInExtractionScope(extractedRelations);
+  const deduplicatedEntities = deduplicateEntitiesInExtractionScope(
+    mappedExtractionData.entities,
+  );
+  const deduplicatedRelations = deduplicateRelationsInExtractionScope(
+    mappedExtractionData.relations,
+  );
 
   // External Deduplication - assigning referenced entities from database
-  const entitiesWithRefs = await assignExternalRefsToEntities(
-    deduplicatedExtractedEntities,
-  );
+  const entitiesWithRefs =
+    await assignExternalRefsToEntities(deduplicatedEntities);
 
   // We can skip deduplication of relations as for that simple exact duplicate checks won't be enough
   // Merger
