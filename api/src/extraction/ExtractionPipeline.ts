@@ -179,8 +179,14 @@ export const ExtractedEntityWithMentionsSchema = ExtractedEntitySchema.extend({
 })
 export type ExtractedEntityWithMentionsType = z.infer<typeof ExtractedEntityWithMentionsSchema>
 
+export const ExtractedEntityWithMentionsAndRefSchema = ExtractedEntityWithMentionsSchema.extend({
+  ref_id: z.uuid().optional() // id of reference entity from database
+})
+export type ExtractedEntityWithMentionsAndRefType = z.infer<typeof ExtractedEntityWithMentionsAndRefSchema>
 
-function deduplicateEntitiesInExtractionScope(extractedEntities: ExtractedEntitiesWithMemoryIdType[]){
+
+
+function deduplicateEntitiesInExtractionScope(extractedEntities: ExtractedEntitiesWithMemoryIdType[]) : ExtractedEntityWithMentionsType[]{
   // key is canon_name + type
   const entities: {[x in string]: ExtractedEntityWithMentionsType} = {}
 
@@ -217,9 +223,38 @@ function deduplicateRelationsInExtractionScope(extractedRelations: ExtractedEnti
   })
 }
 
+async function assignExternalRefToEntity(entity: ExtractedEntityWithMentionsType) : Promise<string | null> {
+  // call database to find candidate with the same (canonical_name or aliasMatch) and type. 
+  // !! THIS IS EXACT REFERENCE FINDER NOT A POSSIBILITY MERGER !!
+  const {data, error: error} = await supabaseClient
+    .from('entities')
+    .select('id')
+    .eq('type', entity.type)
+    .in('aliases', entity.aliases)
+    .or(`canonical_name.eq.${entity.canonical_name}`)
+    .maybeSingle()
+  if (error){
+    logExtractionPipeline('Error in `assignExternalRefToEntity` when fetching data from database')
+    throw error
+  }
+  
+  return data?.id
+}
+
+async function assignExternalRefsToEntities(entities: ExtractedEntityWithMentionsType[]) : Promise<ExtractedEntityWithMentionsAndRefType[]>{
+  return await Promise.all(
+    entities.map(async (entity)=>{
+      const externalRef = await assignExternalRefToEntity(entity)
+      return { ...entity, ...(externalRef ? {ref_id: externalRef} : null) }
+    })
+  )
+}
+
 async function entityResolver(extractionResult: ExtractedEntitiesWithRelationsWithMemoryIdType[]){ 
   // [TODO] We assume that there cannot be an entity with the same name and type in a single memory
   // For that reason first let's check if something like this did happen. If so log it.
+
+  
   checkForDuplicatesInMemoryScope(extractionResult)
 
   const extractedRelations = extractionResult.map((res)=>({
@@ -231,7 +266,14 @@ async function entityResolver(extractionResult: ExtractedEntitiesWithRelationsWi
     memory_id: res.memory_id
   }))
 
+  // Internal Deduplication
   const deduplicatedExtractedEntities  = deduplicateEntitiesInExtractionScope(extractedEntities)
   const deduplicatedExtractedRelations = deduplicateRelationsInExtractionScope(extractedRelations)
+
+  // External Deduplication - assigning referenced entities from database 
+  const fullyDeduplicatedEntities = await assignExternalRefsToEntities(deduplicatedExtractedEntities)
+  // Merger 
+
+  // Inserter
   
 }
