@@ -20,7 +20,14 @@ testPrompts = [
   # - Cinema go-out scheduled for tomorrow
   
   # Expected entities:
-  # Matthew(Person), Rust(Programming language), Cinema(Location), EVENT:cinema_visit:<date of next_week>
+  # Matthew(Person), Rust(Programming language), Cinema(Location), EVENT:cinema_visit:<date of tomorrow>
+
+  ## Current results:
+  # Matthew(Person), Rust(Programming language), EVENT:cinema:<date of tomorrow>
+  # Could be wrong but is it really?
+  # EVENT:meeting:<date of today>
+  # ! Missing !
+  # Cinema(Location)
   {
     "content": "Today I met Matthew. I also like Rust. Me and Matthew (who hates rust) are planning to go to the cinema tomorrow",
     "response": False

@@ -320,13 +320,14 @@ async function assignExternalRefToEntity(
 ): Promise<string | null> {
   // call database to find candidate with the same (canonical_name or aliasMatch) and type.
   // !! THIS IS EXACT REFERENCE FINDER NOT A POSSIBILITY MERGER !!
-  const { data, error: error } = await supabaseClient
-    .from("entities")
-    .select("id")
-    .eq("type", entity.type)
-    .in("aliases", entity.aliases)
-    .or(`canonical_name.eq.${entity.canonical_name}`)
-    .maybeSingle();
+  const { data, error: error } = await supabaseClient.rpc(
+    'get_matching_id_for_entity', 
+    {
+      p_entity_type: entity.type,
+      p_entity_aliases: entity.aliases,
+      p_entity_canonical_name: entity.canonical_name,
+    }
+  )
   if (error) {
     logExtractionPipeline(
       "Error in `assignExternalRefToEntity` when fetching data from database",
@@ -435,9 +436,12 @@ async function entityResolver(
     mappedExtractionData.relations,
   );
 
+  logExtractionPipeline('Starting assigning external refs to entities')
   // External Deduplication - assigning referenced entities from database
   const entitiesWithRefs =
     await assignExternalRefsToEntities(deduplicatedEntities);
+
+  logExtractionPipeline('Results of direct entity deduplication: ', entitiesWithRefs)
 
   // We can skip deduplication of relations as for that simple exact duplicate checks won't be enough
   // Merger

@@ -9,7 +9,7 @@ messages = []
 message = " "
 while message != "":
   message = input("\nYou: ")
-
+ 
   messages.append({
     'role': "user",
     'content': message
