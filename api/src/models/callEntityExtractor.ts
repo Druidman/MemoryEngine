@@ -42,14 +42,14 @@ When the memory describes an event, occasion, or gathering with no proper noun, 
 - Emit ATTENDED / HOSTED / etc. relations linking participants (including 'user') to the event entity.
 ## relations items
 {
-  "subject": string,    // the entity the relation is FROM
-  "object": string,     // the entity the relation is TO
+  "subject": { "canonical_name": string, "type": string },  // the entity the relation is FROM
+  "object": { "canonical_name": string, "type": string },   // the entity the relation is TO
   "relation": string,   // the relation predicate (free-form; not necessarily a verb)
   "confidence": float   // 0.0–1.0
 }
-- Direction convention: 'subject' is the source/FROM-entity, 'object' is the target/TO-entity. Read as: subject [relation] object. Example: "Alice likes coffee" → subject="Alice", relation="LIKES", object="coffee".
+- Direction convention: 'subject' is the source/FROM-entity, 'object' is the target/TO-entity. Read as: subject [relation] object. Example: "Alice likes coffee" → subject={"canonical_name":"Alice","type":"PERSON"}, relation="LIKES", object={"canonical_name":"coffee","type":"CONCEPT"}.
 - relation: free-form predicate (not required to be a verb) — e.g. WORKS_AT, LOCATED_IN, FRIEND_OF, OWNS, PART_OF, PREFERENCE_FOR, MEMBER_OF, ATTENDED, HAS_MANAGER. Not a closed vocabulary.
-- Both 'subject' and 'object' MUST correspond to an entity that is either (a) in the 'entities' array, (b) a 'known_entity' (even if you did not emit it into 'entities', e.g. 'user'), or (c) an anchor you constructed (e.g. an EVENT entity). If either endpoint cannot be resolved to such an entity, do NOT emit the relation.
+- Both 'subject' and 'object' MUST correspond to an entity that is either (a) in the 'entities' array, (b) a 'known_entity' (even if you did not emit it into 'entities', e.g. 'user'), or (c) an anchor you constructed (e.g. an EVENT entity). The 'canonical_name' and 'type' in the reference MUST exactly match the target entity's 'canonical_name' and 'type'. If either endpoint cannot be resolved to such an entity, do NOT emit the relation.
 - confidence: per the scale below.
 # THE SPEAKER / 'user' ENTITY (RESERVED, ALWAYS IN known_entities)
 The memory OWNER is the 'user' entity and is ALWAYS provided in 'known_entities' (an entry like { "canonical_name": "user", "type": "USER", "aliases": [] }). Depending on upstream normalization, the owner appears in the memory text as EITHER:
@@ -57,7 +57,7 @@ The memory OWNER is the 'user' entity and is ALWAYS provided in 'known_entities'
 - the literal token "User" / "user" — because an upstream memory extractor rewrites first person into third person (e.g. "User met Mathew today").
 Treat EITHER form as a mention of 'user'. The 'aliases' list for 'user' may be empty — do NOT rely on it; recognize the owner by the pronoun forms above and by the "User" token.
 - DO NOT emit 'user' in the 'entities' array. 'user' is a fixed system anchor owned by the sanitizer; re-creating it (e.g. as a PERSON named "User") would duplicate/confuse it.
-- DO emit relations where 'user' is the 'subject' or 'object', using the canonical name exactly as given in 'known_entities' ("user" by default). This is required — owner relations are the most valuable signal.
+- DO emit relations where 'user' is the 'subject' or 'object', using the reference { "canonical_name": "user", "type": "USER" }. This is required — owner relations are the most valuable signal.
 - In all other respects 'user' is handled like any other known entity EXCEPT extraction into 'entities'.
 # KNOWN-ENTITY HANDLING
 If the memory mentions an entity in 'known_entities' (by canonical name, known alias, the literal "User"/"user" token, or — for 'user' — first-person pronouns):
@@ -99,10 +99,10 @@ known_entities:
     { "canonical_name": "EVENT:lunch:2026-07-22", "type": "EVENT", "confidence": 0.90, "aliases": [], "properties": { "date": "2026-07-22", "subtype": "lunch" } }
   ],
   "relations": [
-    { "subject": "user", "relation": "ATTENDED", "object": "EVENT:lunch:2026-07-22", "confidence": 0.90 },
-    { "subject": "Alice Chen", "relation": "ATTENDED", "object": "EVENT:lunch:2026-07-22", "confidence": 0.90 },
-    { "subject": "Alice Chen", "relation": "WORKS_AT", "object": "Stanford", "confidence": 0.90 },
-    { "subject": "Alice Chen", "relation": "LIKES", "object": "Rust", "confidence": 0.95 }
+    { "subject": {"canonical_name": "user", "type": "USER"}, "relation": "ATTENDED", "object": {"canonical_name": "EVENT:lunch:2026-07-22", "type": "EVENT"}, "confidence": 0.90 },
+    { "subject": {"canonical_name": "Alice Chen", "type": "PERSON"}, "relation": "ATTENDED", "object": {"canonical_name": "EVENT:lunch:2026-07-22", "type": "EVENT"}, "confidence": 0.90 },
+    { "subject": {"canonical_name": "Alice Chen", "type": "PERSON"}, "relation": "WORKS_AT", "object": {"canonical_name": "Stanford", "type": "ORGANIZATION"}, "confidence": 0.90 },
+    { "subject": {"canonical_name": "Alice Chen", "type": "PERSON"}, "relation": "LIKES", "object": {"canonical_name": "Rust", "type": "PROGRAMMING_LANGUAGE"}, "confidence": 0.95 }
   ]
 }
 `
@@ -119,27 +119,32 @@ export const ExtractedEntitySchema = z.object({
 })
 export type ExtractedEntityType = z.infer<typeof ExtractedEntitySchema>
 
+export const ExtractedEntityCompositeKeySchema = z.object({
+  canonical_name: z.string(),
+  type: z.string()
+})
+export type ExtractedEntityCompositeKeyType = z.infer<typeof ExtractedEntityCompositeKeySchema>
+
 export const ExtractedEntityRelationSchema = z.object({
-  subject: z.string(),
-  object: z.string(),
+  subject: ExtractedEntityCompositeKeySchema,
+  object: ExtractedEntityCompositeKeySchema,
   relation: z.string().uppercase(),
   confidence: z.float32().min(0).max(1),
 })
-
 export type ExtractedEntityRelationType = z.infer<typeof ExtractedEntityRelationSchema>
 
-export const ExtractedEntitiesWithRelationsSchema = z.object({
+export const EntityExtractorResultSchema = z.object({
   entities: ExtractedEntitySchema.array(),
   relations: ExtractedEntityRelationSchema.array()
 })
-export type ExtractedEntitiesWithRelationsType = z.infer<typeof ExtractedEntitiesWithRelationsSchema>
+export type EntityExtractorResultType = z.infer<typeof EntityExtractorResultSchema>
 
 
 export async function callEntityExtractor(memory: ExtractedMemoryWithDateType, known_entities: EntityRepresentationType[])
-: Promise<ExtractedEntitiesWithRelationsType>{
+: Promise<EntityExtractorResultType>{
   
   // Now call the model
-  const result = await callModel<ExtractedEntitiesWithRelationsType>(
+  const result = await callModel<EntityExtractorResultType>(
     EXTRACTION_MODEL, 
     [
       {
@@ -159,7 +164,7 @@ export async function callEntityExtractor(memory: ExtractedMemoryWithDateType, k
       }
     ],
     SYS_PROMPT,
-    ExtractedEntitiesWithRelationsSchema,
+    EntityExtractorResultSchema,
     "callEntityExtractor"
   )
 
