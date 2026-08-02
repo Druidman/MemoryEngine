@@ -1,1 +1,2 @@
+-- Ready
 CREATE EXTENSION IF NOT EXISTS vector SCHEMA extensions;

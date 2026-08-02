@@ -1,3 +1,4 @@
+-- Ready
 create or replace function get_matching_id_for_entity(
   p_entity_type text,
   p_entity_aliases text[],

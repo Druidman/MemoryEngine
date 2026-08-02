@@ -1,3 +1,5 @@
+-- Ready
+
 -- MEMORIES TABLE IS APPEND ONLY:
 -- - no data loss
 -- - backtracking (how data changed over time)

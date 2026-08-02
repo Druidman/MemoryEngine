@@ -1,4 +1,4 @@
--- For now postgres is sufficient for this
+-- Ready
 
 create table sessions (
   id uuid not null primary key default gen_random_uuid(),

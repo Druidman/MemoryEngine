@@ -1,3 +1,4 @@
+-- Ready
 create or replace function get_matching_id_for_relation(
   p_relation_relation text,
   p_relation_subject_id uuid,

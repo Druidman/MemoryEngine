@@ -417,10 +417,17 @@ async function assignExternalRefToRelations(
 function assignLocalIdsToEntityExtraction(
   extractionResult: EntityExtractorResultWithMemoryIdType[],
 ): MappedMemoryEntitiesWithRelationsType {
+
+  const USER_ENTITY: ExtractedEntityType = {
+    type: "USER",
+    canonical_name: "user",
+    confidence: 1,
+    aliases: []
+  }
+  
   const mappedData = extractionResult.map((memoryExtraction) => {
     const mappedEntities: MappedExtractedEntityType[] =
-      memoryExtraction.entities.flatMap((entity) => {
-
+      [...memoryExtraction.entities, USER_ENTITY].flatMap((entity) => {
         return [
           {
             ...entity,
@@ -518,10 +525,14 @@ async function entityResolver(
   logExtractionPipeline('Results of direct entity deduplication: ', entitiesWithRefs)
   // Assign external entity ids within relations
   const mappedRelations = mapEntityExternalIdsToRelations(deduplicatedRelations, entitiesWithRefs)
+
+  logExtractionPipeline('Starting assigning external refs to relations')
   // Relations deduplication (direct)
   const relationsWithRefs = 
     await assignExternalRefToRelations(mappedRelations)
-  // Inserter
+  logExtractionPipeline('Results of direct relation deduplication: ', relationsWithRefs)
 
+  // Inserter
+  
 }
 
