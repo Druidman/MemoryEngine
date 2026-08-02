@@ -11,3 +11,6 @@ create table containers (
 );
 
 GRANT ALL ON public.containers TO service_role;
+
+-- FOR DEV RUN (KEEPS PAIN OUT OF YOUR ***)
+-- alter table containers alter column owner_id drop not null;

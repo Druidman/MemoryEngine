@@ -30,4 +30,4 @@ create table edges (
 
 );
 
-GRANT INSERT ON public.edges TO service_role;
+GRANT ALL ON public.edges TO service_role;
