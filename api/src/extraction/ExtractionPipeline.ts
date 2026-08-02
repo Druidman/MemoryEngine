@@ -134,7 +134,7 @@ export async function runExtractionPipeline(
 
   logExtractionPipeline(`Entities: ${JSON.stringify(entityExtractionResult)}`);
   // Collect extraction results and pass them to `entity resolver`
-  await entityResolver(entityExtractionResult);
+  await entityResolver(entityExtractionResult, containerId);
 }
 
 function checkForDuplicatesInMemoryScope(
@@ -257,12 +257,15 @@ export type MappedMemoryEntitiesWithRelationsType = z.infer<
   typeof MappedMemoryEntitiesWithRelationsSchema
 >;
 
+export const MappedExtractedEntityMentionSchema = MappedExtractedEntitySchema.omit({
+  type: true,
+  canonical_name: true,
+})
+export type MappedExtractedEntityMentionType = z.infer<typeof MappedExtractedEntityMentionSchema>
+
 export const MappedExtractedEntityWithMentionsSchema =
   MappedExtractedEntitySchema.extend({
-    mentions: MappedExtractedEntitySchema.omit({
-      type: true,
-      canonical_name: true,
-    }).array(),
+    mentions: MappedExtractedEntityMentionSchema.array(),
   });
 export type MappedExtractedEntityWithMentionsType = z.infer<
   typeof MappedExtractedEntityWithMentionsSchema
@@ -305,6 +308,17 @@ export type MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType = 
   typeof MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefSchema
 >;
 
+export const MappedExtractedEntityWithMentionsAndEnsuredRefSchema = MappedExtractedEntityWithMentionsAndRefSchema
+  .omit({
+    ref_id: true
+  }).extend({
+    ref_id: z.uuid() // non optional
+  })
+
+export type MappedExtractedEntityWithMentionsAndEnsuredRefType = z.infer<
+  typeof MappedExtractedEntityWithMentionsAndEnsuredRefSchema
+>;
+
 function deduplicateEntitiesInExtractionScope(
   mappedExtractedEntities: MappedExtractedEntityType[],
 ): MappedExtractedEntityWithMentionsType[] {
@@ -317,15 +331,13 @@ function deduplicateEntitiesInExtractionScope(
     if (idName in entities) {
       // key exists
       // we need to merge it
-      entities[idName] = mergeEntityWithMention(entities[idName], {
-        ...entity,
-        memory_id: entity.memory_id,
-      });
+      entities[idName] = mergeEntityWithMention(entities[idName], entity);
     } else {
       // add new entry
+      const {canonical_name, type, ...mention} = entity
       entities[idName] = {
         ...entity,
-        mentions: [{ ...entity, memory_id: entity.memory_id }],
+        mentions: [mention],
       };
     }
   });
@@ -365,7 +377,7 @@ async function assignExternalRefToEntity(
     throw error;
   }
 
-  return data?.id;
+  return data;
 }
 
 async function assignExternalRefsToEntities(
@@ -496,6 +508,7 @@ function mapEntityExternalIdsToRelations(
 
 async function entityResolver(
   extractionResult: EntityExtractorResultWithMemoryIdType[],
+  containerId: string
 ) {
   // [TODO] We assume that there cannot be an entity with the same name and type in a single memory
   // For that reason first let's check if something like this did happen. If so log it.
@@ -532,7 +545,84 @@ async function entityResolver(
     await assignExternalRefToRelations(mappedRelations)
   logExtractionPipeline('Results of direct relation deduplication: ', relationsWithRefs)
 
-  // Inserter
+  // After chats with hermes I came to a conclusion that "indirect relation deduper" is "nice to have"
+  // the other hand "indirect entity deduper" is MUST HAVE xD
+  // Indirect will use queue based deduping which is not to be done here. 
   
+  // Inserter
+  logExtractionPipeline('Inserting entities to database...')
+  await insertEntitiesToDatabase(entitiesWithRefs, containerId)
+  logExtractionPipeline('Inserted entities to database.')
+  
+
+}
+
+
+
+async function insertEntitiesToDatabase(
+  entities: MappedExtractedEntityWithMentionsAndRefType[], 
+  containerId: string
+) : Promise<MappedExtractedEntityWithMentionsAndEnsuredRefType[]> {
+  // if ref id is present this means that entity itself will be inserted as a mention to already existing object
+  const readyToInsertEntity = (entity: MappedExtractedEntityWithMentionsAndRefType) => {
+    const {mentions, local_id, ref_id, memory_id, ...rest} = entity
+    return {
+      ...rest,
+      container_id: containerId
+    }
+  }
+  const readyToInsertEntityMention = (entityMention: MappedExtractedEntityMentionType, entity_id: string) => {
+    const {local_id, ...rest} = entityMention
+    return {
+      ...rest,
+      entity_id: entity_id
+    }
+  }
+
+  const entitiesWithoutRefs = entities.filter((entity)=>!entity.ref_id)
+  const entitiesWithRefs = entities.filter((entity)=>entity.ref_id)
+
+
+  // insert entitiesWithoutRefs
+  logExtractionPipeline('Inserting entities without refs(new) to database...')
+  const {data: newEntityIds, error: newEntityInsertError} = await supabaseClient
+      .from('entities')
+      .insert(entitiesWithoutRefs.map((entity)=>readyToInsertEntity(entity)))
+      .select('id')
+
+  if (newEntityInsertError){
+    logExtractionPipeline('Error when inserting new entities into db.', newEntityInsertError)
+    throw newEntityInsertError
+  }
+  // map ids to entitiesWithoutRefs mentions
+  entitiesWithoutRefs.forEach((_element, index, arr)=>{
+    arr[index].ref_id = newEntityIds[index].id
+  })
+
+  // insert ALL mentions at once. 
+  logExtractionPipeline('Inserting entity mentions to database...')
+  const {error: entityMentionsInsertError} = await supabaseClient
+    .from('entity_mentions')
+    .insert([...entitiesWithRefs, ...entitiesWithoutRefs].flatMap((entity)=>{
+      // use ! here as ref_ids are ensured in entitiesWithRefs and previously mapped to entitiesWithoutRefs
+      
+      return entity.mentions.map((mention)=>{
+        console.log(mention)
+        return readyToInsertEntityMention(mention, entity.ref_id!)
+      })
+    }))
+    .select('id')
+
+  if (entityMentionsInsertError){
+    logExtractionPipeline('Error when inserting new mentions into db.', entityMentionsInsertError)
+    throw entityMentionsInsertError
+  }
+
+  // We don't care about mention ids as they are useless.
+  // However we do care about inserting relations which require entity id.
+  // After mapping in previous steps we can return merge of those arrays and these would ensure that ref_id is present
+  return [...entitiesWithRefs, ...entitiesWithoutRefs] as MappedExtractedEntityWithMentionsAndEnsuredRefType[]
+
+
 }
 
