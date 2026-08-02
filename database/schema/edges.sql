@@ -2,8 +2,8 @@ create table edges (
   id uuid primary key default gen_random_uuid(),
 
   -- RETHINK `on delete` case
-  from_id uuid references public.entities(id) on delete set null on update cascade,
-  to_id uuid references public.entities(id) on delete set null on update cascade,
+  subject_id uuid references public.entities(id) on delete set null on update cascade,
+  object_id uuid references public.entities(id) on delete set null on update cascade,
 
   -- Memory this relation was taken from
   memory_id uuid references public.memories(id) on delete set null on update cascade,
@@ -12,8 +12,8 @@ create table edges (
   superseeded_by uuid references public.edges(id) on delete set null on update cascade,
 
   -- Actual relationship.
-  -- !! FROM_ID -> TO_ID form !!
-  type text not null,
+  -- !! subject_id -> object_id form !!
+  relation text not null,
   -- Confidence about relationship
   confidence float not null,
 
@@ -25,7 +25,7 @@ create table edges (
   updated_at timestamp with time zone not null default now(),
 
   constraint edges_check_entities check (
-    from_id <> to_id
+    subject_id <> object_id
   )
 
 );

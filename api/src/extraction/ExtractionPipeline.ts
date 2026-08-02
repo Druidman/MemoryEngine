@@ -242,8 +242,8 @@ export const MappedExtractedEntityRelationSchema =
       subject: true,
     })
     .extend({
-      local_subject_id: z.uuid().or(z.literal(["USER"])),
-      local_object_id: z.uuid().or(z.literal(["USER"])),
+      local_subject_id: z.uuid(),
+      local_object_id: z.uuid(),
     });
 export type MappedExtractedEntityRelationType = z.infer<
   typeof MappedExtractedEntityRelationSchema
@@ -276,6 +276,35 @@ export type MappedExtractedEntityWithMentionsAndRefType = z.infer<
   typeof MappedExtractedEntityWithMentionsAndRefSchema
 >;
 
+export const MappedExtractedEntityRelationWithMentionsSchema =
+  MappedExtractedEntityRelationSchema.extend({
+    mentions: MappedExtractedEntityRelationSchema.omit({
+      local_subject_id: true,
+      local_object_id: true,
+      relation: true
+    }).array(),
+  });
+export type MappedExtractedEntityRelationWithMentionsType = z.infer<
+  typeof MappedExtractedEntityRelationWithMentionsSchema
+>;
+
+export const MappedExtractedEntityRelationWithMentionsAndExternalIdsSchema = 
+  MappedExtractedEntityRelationWithMentionsSchema.extend({
+    subject_ref_id: z.uuid().optional(),
+    object_ref_id: z.uuid().optional()
+  })
+export type MappedExtractedEntityRelationWithMentionsAndExternalIdsType = z.infer<
+  typeof MappedExtractedEntityRelationWithMentionsAndExternalIdsSchema
+>;
+
+export const MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefSchema =
+  MappedExtractedEntityRelationWithMentionsAndExternalIdsSchema.extend({
+    ref_id: z.uuid().optional(), // id of reference relation from database
+  });
+export type MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType = z.infer<
+  typeof MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefSchema
+>;
+
 function deduplicateEntitiesInExtractionScope(
   mappedExtractedEntities: MappedExtractedEntityType[],
 ): MappedExtractedEntityWithMentionsType[] {
@@ -306,12 +335,13 @@ function deduplicateEntitiesInExtractionScope(
 
 function deduplicateRelationsInExtractionScope(
   extractedRelations: MappedExtractedEntityRelationType[],
-) {
+) : MappedExtractedEntityRelationWithMentionsType[] {
   // Since these functions are handling direct duplicates we will skip this implementation as it is VERY uncommon to happen
   // What is common to happen is indirect duplicate however we will not be handling that here
   return extractedRelations.flatMap((relation) => ({
     ...relation,
     memory_id: relation.memory_id,
+    mentions: []
   }));
 }
 
@@ -349,16 +379,47 @@ async function assignExternalRefsToEntities(
   );
 }
 
+async function assignExternalRefToRelation(
+  relation: MappedExtractedEntityRelationWithMentionsAndExternalIdsType
+) : Promise<string | null> {
+
+  if (!relation.subject_ref_id || !relation.object_ref_id){
+    return null
+  }
+
+  const { data, error: error } = await supabaseClient.rpc(
+    'get_matching_id_for_relation', 
+    {
+      p_relation_relation: relation.relation,
+      p_relation_subject_id: relation.subject_ref_id,
+      p_relation_object_id: relation.subject_ref_id,
+    }
+  )
+  if (error) {
+    logExtractionPipeline(
+      "Error in `assignExternalRefToRelation` when fetching data from database",
+    );
+    throw error;
+  }
+
+  return data?.id;
+}
+
+async function assignExternalRefToRelations(
+  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsType[]
+) : Promise<MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[]>{
+  return await Promise.all(relations.map(async (relation)=>{
+    const externalRef = await assignExternalRefToRelation(relation);
+    return { ...relation, ...(externalRef ? { ref_id: externalRef } : null) }
+  }))
+}
+
 function assignLocalIdsToEntityExtraction(
   extractionResult: EntityExtractorResultWithMemoryIdType[],
 ): MappedMemoryEntitiesWithRelationsType {
   const mappedData = extractionResult.map((memoryExtraction) => {
     const mappedEntities: MappedExtractedEntityType[] =
       memoryExtraction.entities.flatMap((entity) => {
-        // user entity filter
-        if (entity.type == "USER") {
-          return [];
-        }
 
         return [
           {
@@ -383,9 +444,8 @@ function assignLocalIdsToEntityExtraction(
         );
 
         if (
-          (!foundSubject && subject.type != "USER") ||
-          (!foundObject && object.type != "USER")
-        ) {
+          !foundSubject || !foundObject
+        ){
           const message = `[assignLocalIdsToEntityExtraction]: ${
             !foundSubject && !foundObject
               ? "Subject and Object"
@@ -400,8 +460,8 @@ function assignLocalIdsToEntityExtraction(
         return {
           ...rest,
           local_id: crypto.randomUUID(),
-          local_subject_id: foundSubject?.local_id ?? "USER",
-          local_object_id: foundObject?.local_id ?? "USER",
+          local_subject_id: foundSubject.local_id,
+          local_object_id: foundObject.local_id,
           memory_id: memoryExtraction.memory_id,
         };
       });
@@ -412,6 +472,19 @@ function assignLocalIdsToEntityExtraction(
     entities: mappedData.flatMap((entry) => entry.entities),
     relations: mappedData.flatMap((entry) => entry.relations),
   };
+}
+
+function mapEntityExternalIdsToRelations(
+  relations: MappedExtractedEntityRelationWithMentionsType[],
+  entities: MappedExtractedEntityWithMentionsAndRefType[]
+) : MappedExtractedEntityRelationWithMentionsAndExternalIdsType[] {
+  return relations.map((relation)=>{
+    return {
+      ...relation,
+      subject_ref_id: entities.find((entity)=>entity.local_id == relation.local_subject_id)?.ref_id,
+      object_ref_id: entities.find((entity)=>entity.local_id == relation.local_object_id)?.ref_id  
+    }
+  })
 }
 
 async function entityResolver(
@@ -436,15 +509,19 @@ async function entityResolver(
     mappedExtractionData.relations,
   );
 
+  // Merger
   logExtractionPipeline('Starting assigning external refs to entities')
   // External Deduplication - assigning referenced entities from database
   const entitiesWithRefs =
     await assignExternalRefsToEntities(deduplicatedEntities);
 
   logExtractionPipeline('Results of direct entity deduplication: ', entitiesWithRefs)
-
-  // We can skip deduplication of relations as for that simple exact duplicate checks won't be enough
-  // Merger
-
+  // Assign external entity ids within relations
+  const mappedRelations = mapEntityExternalIdsToRelations(deduplicatedRelations, entitiesWithRefs)
+  // Relations deduplication (direct)
+  const relationsWithRefs = 
+    await assignExternalRefToRelations(mappedRelations)
   // Inserter
+
 }
+
