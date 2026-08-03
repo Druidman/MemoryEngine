@@ -1,5 +1,5 @@
 
-import { callModel } from "./callModel";
+import { callModel, GeneralModelParams } from "./callModel";
 import * as z from 'zod'
 import { EntityRepresentationType } from "../database/entities";
 import { ExtractedMemoryWithDateType } from "./callMemoryExtractor";
@@ -144,27 +144,29 @@ export async function callEntityExtractor(memory: ExtractedMemoryWithDateType, k
 : Promise<EntityExtractorResultType>{
   
   // Now call the model
-  const result = await callModel<EntityExtractorResultType>(
-    EXTRACTION_MODEL, 
-    [
-      {
-        role: "user",
-        content: `
-          MEMORY
-          ${
-            JSON.stringify({
-              content: memory.content,
-              type: memory.type,
-              created_at: memory.created_at
-            })
-          }
-          KNOWN_ENTITIES
-          ${JSON.stringify(known_entities)}
-        `
-      }
-    ],
-    SYS_PROMPT,
-    EntityExtractorResultSchema,
+  const result = await callModel<GeneralModelParams, EntityExtractorResultType>(
+    EXTRACTION_MODEL,
+    {
+      messages:[
+        {
+          role: "user",
+          content: `
+            MEMORY
+            ${
+              JSON.stringify({
+                content: memory.content,
+                type: memory.type,
+                created_at: memory.created_at
+              })
+            }
+            KNOWN_ENTITIES
+            ${JSON.stringify(known_entities)}
+          `
+        }
+      ],
+      sys_prompt: SYS_PROMPT,
+      validation_schema: EntityExtractorResultSchema
+    },
     "callEntityExtractor"
   )
 

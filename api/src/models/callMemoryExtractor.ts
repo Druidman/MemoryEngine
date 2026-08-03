@@ -1,5 +1,5 @@
 import { Memory } from "../database/memories";
-import { callModel } from "./callModel";
+import { callModel, GeneralModelParams } from "./callModel";
 import * as z from 'zod'
 import { ChatMessages } from "./callModel";
 
@@ -71,24 +71,26 @@ export async function callMemoryExtractor(newMessages: ChatMessages[], previousS
 
   // Now call the model
 
-  const result = await callModel<ExtractedMemoriesType>(
-    EXTRACTION_MODEL, 
-    [
-      {
-        role: "user",
-        content: `
-          ## Existing Session Memories
-${formatedMemories.length ? JSON.stringify(formatedMemories) : "None yet.\n"}
-
-          ## New Messages
-          ${JSON.stringify(newMessages)}
-
-          Extract memories now.
-        `
-      }
-    ],
-    SYS_PROMPT,
-    ExtractedMemoriesSchema,
+  const result = await callModel<GeneralModelParams, ExtractedMemoriesType>(
+    EXTRACTION_MODEL,
+    {
+      validation_schema: ExtractedMemoriesSchema,
+      sys_prompt: SYS_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: `
+            ## Existing Session Memories
+  ${formatedMemories.length ? JSON.stringify(formatedMemories) : "None yet.\n"}
+  
+            ## New Messages
+            ${JSON.stringify(newMessages)}
+  
+            Extract memories now.
+          `
+        }
+      ]
+    },
     "callMemoryExtractor"
   )
 
