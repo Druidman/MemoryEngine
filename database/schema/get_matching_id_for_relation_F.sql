@@ -2,7 +2,8 @@
 create or replace function get_matching_id_for_relation(
   p_relation_relation text,
   p_relation_subject_id uuid,
-  p_relation_object_id uuid
+  p_relation_object_id uuid,
+  p_container_id uuid
 ) returns uuid
 language sql
 security invoker
@@ -11,6 +12,8 @@ as $$
 SELECT 
   e.id
 from public.edges e where
+e.container_id=p_container_id 
+and
 e.relation = p_relation_relation
 and
 e.subject_id = p_relation_subject_id

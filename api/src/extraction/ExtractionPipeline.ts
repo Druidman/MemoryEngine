@@ -134,7 +134,21 @@ export async function runExtractionPipeline(
 
   logExtractionPipeline(`Entities: ${JSON.stringify(entityExtractionResult)}`);
   // Collect extraction results and pass them to `entity resolver`
-  await entityResolver(entityExtractionResult, containerId);
+  const {entities: resolvedEntities, relations: resolvedRelations} = 
+    await entityResolver(entityExtractionResult, containerId);
+
+
+  // Embeed entities
+  // await addEmbeddingForEntities()
+  
+  // Inserter
+  logExtractionPipeline('Inserting entities to database...')
+  const entitiesWithEnsuredRefs = await insertEntitiesToDatabase(resolvedEntities, containerId)
+  logExtractionPipeline('Inserted entities to database.')
+
+  // Now insert relations
+  // await insertEntityRelationsToDatabase(entitiesWithRefs, containerId)
+  
 }
 
 function checkForDuplicatesInMemoryScope(
@@ -359,6 +373,7 @@ function deduplicateRelationsInExtractionScope(
 
 async function assignExternalRefToEntity(
   entity: MappedExtractedEntityWithMentionsType,
+  containerId: string
 ): Promise<string | null> {
   // call database to find candidate with the same (canonical_name or aliasMatch) and type.
   // !! THIS IS EXACT REFERENCE FINDER NOT A POSSIBILITY MERGER !!
@@ -368,6 +383,7 @@ async function assignExternalRefToEntity(
       p_entity_type: entity.type,
       p_entity_aliases: entity.aliases,
       p_entity_canonical_name: entity.canonical_name,
+      p_container_id: containerId
     }
   )
   if (error) {
@@ -382,17 +398,19 @@ async function assignExternalRefToEntity(
 
 async function assignExternalRefsToEntities(
   entities: MappedExtractedEntityWithMentionsType[],
+  containerId: string
 ): Promise<MappedExtractedEntityWithMentionsAndRefType[]> {
   return await Promise.all(
     entities.map(async (entity) => {
-      const externalRef = await assignExternalRefToEntity(entity);
+      const externalRef = await assignExternalRefToEntity(entity, containerId);
       return { ...entity, ...(externalRef ? { ref_id: externalRef } : null) };
     }),
   );
 }
 
 async function assignExternalRefToRelation(
-  relation: MappedExtractedEntityRelationWithMentionsAndExternalIdsType
+  relation: MappedExtractedEntityRelationWithMentionsAndExternalIdsType,
+  containerId: string
 ) : Promise<string | null> {
 
   if (!relation.subject_ref_id || !relation.object_ref_id){
@@ -404,7 +422,8 @@ async function assignExternalRefToRelation(
     {
       p_relation_relation: relation.relation,
       p_relation_subject_id: relation.subject_ref_id,
-      p_relation_object_id: relation.subject_ref_id,
+      p_relation_object_id: relation.object_ref_id,
+      p_container_id: containerId
     }
   )
   if (error) {
@@ -418,10 +437,11 @@ async function assignExternalRefToRelation(
 }
 
 async function assignExternalRefToRelations(
-  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsType[]
+  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsType[],
+  containerId: string
 ) : Promise<MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[]>{
   return await Promise.all(relations.map(async (relation)=>{
-    const externalRef = await assignExternalRefToRelation(relation);
+    const externalRef = await assignExternalRefToRelation(relation, containerId);
     return { ...relation, ...(externalRef ? { ref_id: externalRef } : null) }
   }))
 }
@@ -533,7 +553,7 @@ async function entityResolver(
   logExtractionPipeline('Starting assigning external refs to entities')
   // External Deduplication - assigning referenced entities from database
   const entitiesWithRefs =
-    await assignExternalRefsToEntities(deduplicatedEntities);
+    await assignExternalRefsToEntities(deduplicatedEntities, containerId);
 
   logExtractionPipeline('Results of direct entity deduplication: ', entitiesWithRefs)
   // Assign external entity ids within relations
@@ -542,17 +562,17 @@ async function entityResolver(
   logExtractionPipeline('Starting assigning external refs to relations')
   // Relations deduplication (direct)
   const relationsWithRefs = 
-    await assignExternalRefToRelations(mappedRelations)
+    await assignExternalRefToRelations(mappedRelations, containerId)
   logExtractionPipeline('Results of direct relation deduplication: ', relationsWithRefs)
 
   // After chats with hermes I came to a conclusion that "indirect relation deduper" is "nice to have"
   // the other hand "indirect entity deduper" is MUST HAVE xD
   // Indirect will use queue based deduping which is not to be done here. 
-  
-  // Inserter
-  logExtractionPipeline('Inserting entities to database...')
-  await insertEntitiesToDatabase(entitiesWithRefs, containerId)
-  logExtractionPipeline('Inserted entities to database.')
+
+  return {
+    relations: relationsWithRefs,
+    entities: entitiesWithRefs
+  }
   
 
 }
