@@ -11,7 +11,7 @@ create table relations (
   memory_id uuid references public.memories(id) on delete set null on update cascade,
 
   -- New edge that defines current (newest) state of relationship 
-  superseededes uuid references public.edges(id) on delete set null on update cascade,
+  superseededes uuid references public.relations(id) on delete set null on update cascade,
 
   -- Actual relationship.
   -- !! subject_id -> object_id form !!
@@ -24,10 +24,13 @@ create table relations (
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
 
-  constraint edges_check_entities check (
+  constraint relations_check_entities check (
     subject_id <> object_id
+  ),
+  constraint relations_confidence check (
+    confidence <= 1 AND confidence > 0
   )
 
 );
 
-GRANT ALL ON public.edges TO service_role;
+GRANT ALL ON public.relations TO service_role;

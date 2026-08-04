@@ -78,7 +78,7 @@ export async function runExtractionPipeline(
 
   // Now insert relations
   logExtractionPipeline('Inserting relations to database...')
-  await insertEntityRelationsToDatabase(resolvedRelations, entitiesWithEnsuredRefs, containerId)
+  await insertRelationsToDatabase(resolvedRelations, entitiesWithEnsuredRefs, containerId)
   logExtractionPipeline('Inserted relations to database.')
   
 }
