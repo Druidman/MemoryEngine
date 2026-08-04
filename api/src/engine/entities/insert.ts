@@ -38,8 +38,8 @@ export async function insertEntitiesToDatabase(
     throw newEntityInsertError
   }
   // map ids to entitiesWithoutRefs mentions
-  entitiesWithoutRefs.forEach((_element, index, arr)=>{
-    arr[index].ref_id = newEntityIds[index].id
+  entitiesWithoutRefs.forEach((element, index)=>{
+    element.ref_id = newEntityIds[index].id
   })
 
   // insert ALL mentions at once. 
@@ -71,9 +71,54 @@ export async function insertEntitiesToDatabase(
 
 
 export async function insertRelationsToDatabase(
-  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[],
-  entities: MappedExtractedEntityWithMentionsAndEnsuredRefType[],
-  containerId: string
+  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[]
 ){
+
   
+
+  const relationsWithoutRef = relations.filter((relation)=>!relation.ref_id)
+  const relationsWithRef = relations.filter((relation)=>relation.ref_id)
+  // Insert relations
+  const {data: relationsWithoutRef_Ids, error: relationInsertError} = await supabaseClient
+    .from('relations')
+    .insert(relationsWithoutRef.map((relation)=>{
+      const {
+        local_id,
+        local_object_id,
+        local_subject_id,
+        mentions,
+        subject_ref_id,
+        object_ref_id,
+        ref_id,
+        ...formated
+      } = relation
+      return {
+        ...formated,
+        subject_id: subject_ref_id,
+        object_id: object_ref_id
+      }
+    }))
+    .select('id')
+  
+  if (relationInsertError) throw relationInsertError
+
+  // Map ids 
+  relationsWithoutRef.forEach((relation, ind)=>{
+    relation.ref_id = relationsWithoutRef_Ids[ind].id
+  })
+
+  // Insert Mentions (relationsWithRef mentions and without ref mentions)
+  const {error: relationMentionsInsertError} = await supabaseClient
+    .from('relation_mentions')
+    .insert([...relationsWithoutRef, ...relationsWithRef].flatMap((relation)=>{
+      return relation.mentions.map((mention)=>{
+        const {
+          local_id,
+          ...formated
+        } = mention
+        return formated
+      })
+    }))
+  
+  if (relationMentionsInsertError) throw relationMentionsInsertError
 }

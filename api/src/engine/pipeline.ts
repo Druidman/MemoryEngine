@@ -15,8 +15,9 @@ import { logExtractionPipeline } from "./logger/log";
 import { extractMemories } from "./memories/extract";
 import { insertMemories } from "./memories/insert";
 import { extractEntities } from "./entities/extract";
-import { insertEntitiesToDatabase } from "./entities/insert";
+import { insertEntitiesToDatabase, insertRelationsToDatabase } from "./entities/insert";
 import { entityResolver } from "./entities/resolver/resolve";
+import { MappedExtractedEntityWithMentionsAndEnsuredRefType } from "./entities/resolver/types";
 
 export const EntityExtractorResultWithMemoryIdSchema =
   EntityExtractorResultSchema.extend({
@@ -76,9 +77,26 @@ export async function runExtractionPipeline(
   const entitiesWithEnsuredRefs = await insertEntitiesToDatabase(resolvedEntities, containerId)
   logExtractionPipeline('Inserted entities to database.')
 
+  // First ensure that refs are propagated into relations
+  const entityLocalIdHashTable: {[x in string]: MappedExtractedEntityWithMentionsAndEnsuredRefType} = {}
+  entitiesWithEnsuredRefs.forEach((entity)=>{
+    if (entity.local_id in entityLocalIdHashTable){
+      logExtractionPipeline("[UNEXPECTED_ERROR] Found two entities with the same local_id: ", entity, entityLocalIdHashTable[entity.local_id])
+      throw new Error("Found two entities with the same local_id")
+    }
+    entityLocalIdHashTable[entity.local_id] = entity
+  })
+
+  // We assume that local_id from relations will always be found in entityLocalIdHashTable
+  // Map refs to relations
+  resolvedRelations.forEach((relation)=>{
+    relation.subject_ref_id = entityLocalIdHashTable[relation.local_subject_id].ref_id
+    relation.object_ref_id = entityLocalIdHashTable[relation.local_object_id].ref_id
+  })
+  
   // Now insert relations
   logExtractionPipeline('Inserting relations to database...')
-  await insertRelationsToDatabase(resolvedRelations, entitiesWithEnsuredRefs, containerId)
+  await insertRelationsToDatabase(resolvedRelations)
   logExtractionPipeline('Inserted relations to database.')
   
 }
