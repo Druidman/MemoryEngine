@@ -1,4 +1,5 @@
 import * as z from 'zod'
+// Generics in here are kinda crazyyyyyy xD
 
 export type ChatAssistantMessage = {
 

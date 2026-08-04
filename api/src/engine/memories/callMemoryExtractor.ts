@@ -1,7 +1,7 @@
-import { Memory } from "../database/memories";
-import { callModel, GeneralModelParams } from "./callModel";
+import { Memory } from "../../database/memories";
+import { callModel, GeneralModelParams } from "../../openrouter/callModel";
 import * as z from 'zod'
-import { ChatMessages } from "./callModel";
+import { ChatMessages } from "../../openrouter/callModel";
 
 const SYS_PROMPT =`You are a memory extraction engine. Your job is to extract meaningful, durable facts from a conversation and return them as structured JSON.
 

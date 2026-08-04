@@ -3,7 +3,7 @@ import { logger } from 'hono/logger'
 
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { runExtractionPipeline } from './extraction/ExtractionPipeline'
+import { runExtractionPipeline } from './engine/pipeline'
 import { supabaseClient } from './database/supabaseClient'
 
 
