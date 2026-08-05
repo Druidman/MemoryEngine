@@ -1,7 +1,9 @@
-import { supabaseClient } from "../../../database/supabaseClient";
+
 import { ExtractedEntityType } from "../../../openrouter/callEntityExtractor";
-import { EntityExtractorResultWithMemoryIdType, MappedExtractedEntityRelationType, MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType, MappedExtractedEntityRelationWithMentionsAndExternalIdsType, MappedExtractedEntityType, MappedExtractedEntityWithMentionsAndRefType, MappedExtractedEntityWithMentionsType, MappedMemoryEntitiesWithRelationsType } from "../../pipeline";
+import { MappedExtractedEntityRelationType, MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType, MappedExtractedEntityRelationWithMentionsAndExternalIdsType, MappedExtractedEntityType, MappedExtractedEntityWithMentionsAndRefType, MappedExtractedEntityWithMentionsType, MappedMemoryEntitiesWithRelationsType } from "./types";
+import {EntityExtractorResultWithMemoryIdType} from '../../pipeline'
 import { logExtractionPipeline } from "../../logger/log";
+import { supabaseServiceClient } from "../../../database/supabaseServiceClient";
 
 const USER_ENTITY: ExtractedEntityType = {
   type: "USER",
@@ -103,7 +105,7 @@ async function assignExternalRefToRelation(
     return null
   }
 
-  const { data, error: error } = await supabaseClient.rpc(
+  const { data, error: error } = await supabaseServiceClient.rpc(
     'get_matching_id_for_relation', 
     {
       p_relation_relation: relation.relation,
@@ -127,7 +129,7 @@ async function assignExternalRefToEntity(
 ): Promise<string | null> {
   // call database to find candidate with the same (canonical_name or aliasMatch) and type.
   // !! THIS IS EXACT REFERENCE FINDER NOT A POSSIBILITY MERGER !!
-  const { data, error: error } = await supabaseClient.rpc(
+  const { data, error: error } = await supabaseServiceClient.rpc(
     'get_matching_id_for_entity', 
     {
       p_entity_type: entity.type,

@@ -1,5 +1,5 @@
 import { Memory } from "../../database/memories";
-import { supabaseClient } from "../../database/supabaseClient";
+import { supabaseServiceClient } from "../../database/supabaseServiceClient";
 import { callEntityExtractor } from "../../openrouter/callEntityExtractor";
 import { EntityExtractorResultWithMemoryIdType } from "../pipeline";
 import { logExtractionPipeline } from "../logger/log";
@@ -11,13 +11,20 @@ export async function extractEntities(insertedMemories: Memory[], containerId: s
 
   logExtractionPipeline("Fetched known entities", knownEntities);
 
+  const formatMemory = (memory: Memory)=>{
+    const {metadata_hints, ...rest} = memory
+    return {
+      ...rest,
+      superseedes_hint: metadata_hints?.superseedes_hint
+    }
+  }
   // Now for each memory we need to fire extraction
   const entityExtractionResult: EntityExtractorResultWithMemoryIdType[] = await Promise.all(
     insertedMemories.map(async (memory, i) => {
       // console.log(memory)
       logExtractionPipeline(`Extracting entities from memory n: ${i + 1}`);
       const singleExtractionResult = await callEntityExtractor(
-        memory,
+        formatMemory(memory),
         knownEntities,
       );
       logExtractionPipeline(
@@ -36,7 +43,7 @@ export async function extractEntities(insertedMemories: Memory[], containerId: s
 async function fetchKnownEntities(containerId: string){
   // First get known entities
   const { data: knownEntities, error: knownEntitiesError } =
-    await supabaseClient
+    await supabaseServiceClient
       .from("entities")
       .select(
         `

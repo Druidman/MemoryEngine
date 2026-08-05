@@ -1,7 +1,7 @@
 import z from "zod";
 import { MessageType } from "..";
 
-import { supabaseClient } from "../database/supabaseClient";
+import { supabaseServiceClient } from "../database/supabaseServiceClient";
 import {
   callEntityExtractor,
   EntityExtractorResultSchema,

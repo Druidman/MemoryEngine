@@ -1,11 +1,11 @@
 import { Memory } from "../../database/memories";
-import { supabaseClient } from "../../database/supabaseClient";
+import { supabaseServiceClient } from "../../database/supabaseServiceClient";
 import { logExtractionPipeline } from "../logger/log";
 import { ExtractedMemoriesType } from "./callMemoryExtractor";
 
 export async function insertMemories(extractedMemories: ExtractedMemoriesType, sessionId: string, containerId: string){
   const { data: insertedMemories, error: memoriesInsertError } =
-    await supabaseClient
+    await supabaseServiceClient
       .from("memories")
       .insert(
         extractedMemories.memories.map((memory) => ({

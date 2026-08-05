@@ -1,11 +1,11 @@
 import { MessageType } from "../..";
-import { supabaseClient } from "../../database/supabaseClient";
+import { supabaseServiceClient } from "../../database/supabaseServiceClient";
 import { logExtractionPipeline } from "../logger/log";
 import { callMemoryExtractor, ExtractedMemoriesType } from "./callMemoryExtractor";
 import { Memory } from "../../database/memories";
 
 export async function extractMemories(messages: MessageType[], sessionId: string) : Promise<ExtractedMemoriesType> {
-  const { data: sessionMemories, error } = await supabaseClient
+  const { data: sessionMemories, error } = await supabaseServiceClient
     .from("memories")
     .select("*")
     .eq("session_id", sessionId) // single session

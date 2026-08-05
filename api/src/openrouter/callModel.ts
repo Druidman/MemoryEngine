@@ -23,7 +23,7 @@ export type ChatMessages = ChatAssistantMessage | ChatUserMessage
 export interface GeneralModelParams {
   messages: ChatMessages[], 
   sys_prompt: string, 
-  validation_schema: z.ZodObject | null
+  validation_schema?: z.ZodObject
 }
 interface GeneralModelResponse<T> {
   message: T, 
@@ -95,7 +95,7 @@ async function callOpenRouterModel(body: {}){
   return data
 }
 
-async function callGeneralModel(model: string, sys_prompt: string, messages: ChatMessages[],   validation_schema: z.ZodObject | null){
+async function callGeneralModel(model: string, sys_prompt: string, messages: ChatMessages[],   validation_schema?: z.ZodObject){
   const completion = await callOpenRouterModel({
     stream: false,
     messages: [
@@ -104,24 +104,29 @@ async function callGeneralModel(model: string, sys_prompt: string, messages: Cha
     ],
     model: model,
     reasoning: { effort: "high" },
-    response_format: {
-      type: "json_schema",
-      ...(validation_schema ? {
+    ...( validation_schema ?
+    {
+      response_format: {
+        type: "json_schema",
+      
         json_schema: {
           name: "schema",
           strict: true,
           schema: validation_schema?.toJSONSchema(),
-        },
-      } : {})
-    },
+        }
+      },
+    } : null)
   })
 
   const raw = completion.choices[0].message.content as string;
  
-  const message = validation_schema ? validation_schema.parse(JSON.parse(raw)) : JSON.parse(raw)
+  const message = validation_schema ? validation_schema.parse(JSON.parse(raw)) : raw
   const reasoning = completion.choices[0].message.reasoning;
 
-  return { message: message as z.infer<typeof validation_schema>, reasoning: reasoning ?? undefined } as any;
+  return { 
+    message: message as z.infer<typeof validation_schema>, 
+    reasoning: reasoning ?? undefined 
+  } as any;
 }
 
 async function callEmbeddingModel(model: string, input: string | string[], embedding_format: 'float'){
