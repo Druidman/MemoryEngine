@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSupabase } from "./useSupabase"
 import * as z from 'zod'
+import { AuthChangeEvent } from "@supabase/supabase-js"
 
 export const SignInCredsSchema = z.object({
   email: z.email(),
@@ -12,13 +13,32 @@ export function useAuth(){
   const queryClient = useQueryClient()
   const client = useSupabase()
 
-  const {data: user, refetch: refetchUser} = useQuery({
+  
+
+  const {data: user, refetch: refetchUser, isFetching: isFetchingUser} = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
       return (await client.auth.getUser()).data.user
     },
     staleTime: 60_000
   })
+  
+  const anonymousSignIn = async () => {
+    const signInData = await client.auth.signInAnonymously()
+
+    if (signInData.error) throw signInData.error
+
+    queryClient.setQueryData(['user'], signInData.data.user)
+  }
+
+  const isSessionPresent = async () => {
+    return (await client.auth.getSession()).data.session ? true : false
+  }
+
+  const signOut = async () => {
+    await client.auth.signOut()
+    await refetchUser()
+  }
 
   const signIn = async (creds: SignInCreds)=>{
     // verify creds
@@ -46,9 +66,15 @@ export function useAuth(){
   
   return {
     user,
+    isFetchingUser,
     refetchUser,
 
     signIn,
-    signUp
+    signUp,
+
+    signOut,
+
+    anonymousSignIn,
+    isSessionPresent
   }
 }
