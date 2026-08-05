@@ -2,7 +2,7 @@
 import { callModel, GeneralModelParams } from "./callModel";
 import * as z from 'zod'
 import { EntityRepresentationType } from "../database/entities";
-import { ExtractedMemoryWithDateType } from "../memoryExtractor/callMemoryExtractor";
+import { ExtractedMemoryWithDateType } from "../engine/memories/callMemoryExtractor";
 
 
 const SYS_PROMPT = `You are an entity-and-relation extractor for a long-term memory system. You read a single memory and return a structured extraction as JSON. A downstream sanitizer handles deduplication, merging, and cleanup, so you do NOT need to avoid duplicates, merge mentions, or worry about consistency — extract everything the memory supports.
