@@ -1,0 +1,29 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--fg-primary);
+  height: 100%;
+}
+
+:root {
+  /* OneDarkPro Theme Colors */
+  --bg-primary: #282c34;
+  --bg-secondary: #21252b;
+  --bg-surface: #2c313c;
+  --bg-hover: #3e4451;
+  --fg-primary: #abb2bf;
+  --fg-secondary: #5c6370;
+  --fg-muted: #8b919b;
+  --border-color: #3e4451;
+  --border-radius: 6px;
+  --color-blue: #61afef;
+  --color-green: #98c379;
+  --color-red: #e06c75;
+  --color-yellow: #e5c07b;
+  --color-purple: #c678dd;
+  --color-cyan: #56b6c2;
+  --color-orange: #d19a66;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

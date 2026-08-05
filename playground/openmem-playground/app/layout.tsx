@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
-
-
+import { Providers } from "./providers";
+import "./globals.scss";
 
 export const metadata: Metadata = {
   title: "OpenMem Playground",
@@ -12,9 +11,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body >
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
