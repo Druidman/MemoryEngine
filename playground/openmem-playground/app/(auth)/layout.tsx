@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   return <>
     {
-    isAuthenticated ?
+    !isFetchingUser && !user ?
       (
         <div className={styles.container}>
           <div className={styles.card}>{children}</div>

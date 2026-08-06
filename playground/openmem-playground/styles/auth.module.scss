@@ -104,8 +104,12 @@
 .link {
   color: var(--color-blue);
   text-decoration: none;
-
+  background-color: inherit;
+  border: none;
+  margin: 0;
+  padding: 0;
   &:hover {
     text-decoration: underline;
+    cursor: pointer;
   }
 }

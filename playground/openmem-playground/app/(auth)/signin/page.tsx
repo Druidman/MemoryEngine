@@ -8,7 +8,7 @@ import styles from "@/styles/auth.module.scss";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, anonymousSignIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,6 +28,19 @@ export default function SignInPage() {
       setLoading(false);
     }
   };
+  const handleTestClick = async (e: React.MouseEvent)=>{
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await anonymousSignIn()
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Anonymous Sign in failed");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
@@ -68,6 +81,10 @@ export default function SignInPage() {
       <p className={styles.footer}>
         Don&apos;t have an account?{" "}
         <Link href="/signup" className={styles.link}>Sign up</Link>
+        {" "}
+        or
+        {" "}
+        <button className={styles.link} onClick={handleTestClick}>Test</button>
       </p>
     </form>
   );
