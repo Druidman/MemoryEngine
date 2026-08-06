@@ -6,7 +6,9 @@
 
 create table memories (
   id uuid primary key default gen_random_uuid(),
+
   session_id uuid references public.sessions(id) on update cascade on delete set null,
+  -- normalization
   container_id uuid not null references public.containers(id) on update cascade on delete cascade,
 
   content text not null,

@@ -7,8 +7,14 @@ create table relations (
   -- To
   object_id uuid references public.entities(id) on delete set null on update cascade,
 
+  -- Assignment
+  container_id uuid references public.containers(id) on delete cascade on update cascade,
+
   -- Memory this relation was taken from
   memory_id uuid references public.memories(id) on delete set null on update cascade,
+  
+
+  
 
   -- New edge that defines current (newest) state of relationship 
   superseededes uuid references public.relations(id) on delete set null on update cascade,

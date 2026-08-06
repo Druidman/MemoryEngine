@@ -11,6 +11,7 @@ create table entities (
   embedding extensions.vector(1024),
   embedding_model varchar(500),
 
+  -- Assignment
   container_id uuid not null references public.containers(id) on update cascade on delete cascade,
   
 
