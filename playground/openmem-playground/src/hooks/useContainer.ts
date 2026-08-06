@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "./useSupabase";
 import * as z from 'zod'
+import { useAuth } from "./useAuth";
 
 export const EntitySchema = z.object({
   id: z.uuid(),
@@ -50,13 +51,22 @@ export const EntireContainerGraphDataSchema = z.object({
 })
 export type EntireContainerGraphData = z.infer<typeof EntireContainerGraphDataSchema>
 
-export default function useContainer(containerId?: string){
+export const ContainerSchema = z.object({
+  id : z.uuid(),
+  tag: z.string(),
+  owner_id: z.uuid(),
+  created_at: z.string(),
+  updated_at: z.string()
+})
+export type Container = z.infer<typeof ContainerSchema>
+
+export function useContainer(containerId?: string){
   const supabaseClient = useSupabase()
 
   const {
     data: containerData,
-    isFetching,
-    error
+    isFetching: isFetchingContainerData,
+    error: containerDataError
   } = useQuery({
     queryKey: ['container', containerId, 'data'],
     queryFn: async () => {
@@ -76,9 +86,41 @@ export default function useContainer(containerId?: string){
     enabled: !!containerId
   })
 
+  
+
   return {
     containerData,
-    isFetching,
-    error
+    isFetchingContainerData,
+    containerDataError
+  }
+}
+
+
+export function useContainers(){
+  const {user} = useAuth()
+  const supabaseClient = useSupabase()
+
+  const {
+    data: containers,
+    isFetching: isFetchingContainers,
+    error: containersError
+  } = useQuery({
+    queryKey: ['containers', user!.id!],
+    queryFn: async ()=>{
+      const {data, error} = await supabaseClient  
+        .from('containers')
+        .select("*")
+        .eq('owner_id', user?.id)
+      if (error) throw error
+
+      return data as Container[]
+    },
+    enabled: !!user?.id
+  })
+
+  return {
+    containers,
+    isFetchingContainers,
+    containersError
   }
 }
