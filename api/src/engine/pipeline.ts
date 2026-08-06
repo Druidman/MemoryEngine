@@ -1,16 +1,15 @@
 import z from "zod";
-import { MessageType } from "..";
+import { MessageType } from "../types";
 
-import { supabaseServiceClient } from "../database/supabaseServiceClient";
 import {
-  callEntityExtractor,
+
   EntityExtractorResultSchema,
-  EntityExtractorResultType,
+
   ExtractedEntityRelationSchema,
   ExtractedEntitySchema,
-  ExtractedEntityType,
+
 } from "../openrouter/callEntityExtractor";
-import { callMemoryExtractor } from "./memories/callMemoryExtractor";
+
 import { logExtractionPipeline } from "./logger/log";
 import { extractMemories } from "./memories/extract";
 import { insertMemories } from "./memories/insert";
@@ -18,6 +17,7 @@ import { extractEntities } from "./entities/extract";
 import { insertEntitiesToDatabase, insertRelationsToDatabase } from "./entities/insert";
 import { entityResolver } from "./entities/resolver/resolve";
 import { MappedExtractedEntityWithMentionsAndEnsuredRefType } from "./entities/resolver/types";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export const EntityExtractorResultWithMemoryIdSchema =
   EntityExtractorResultSchema.extend({
@@ -49,6 +49,7 @@ export async function runExtractionPipeline(
   messages: MessageType[],
   sessionId: string,
   containerId: string,
+  supabaseClient: SupabaseClient
 ) {
   logExtractionPipeline("Started");
 
@@ -56,17 +57,17 @@ export async function runExtractionPipeline(
 
   // EXTRACT MEMORIES
   // First get current session memories
-  const extractedMemories = await extractMemories(messages, sessionId)
+  const extractedMemories = await extractMemories(messages, sessionId, supabaseClient)
 
   // Now insert those memories into db
-  const insertedMemories = await insertMemories(extractedMemories, sessionId, containerId)
+  const insertedMemories = await insertMemories(extractedMemories, sessionId, containerId, supabaseClient)
 
   // EXTRACT ENTITIES
-  const entityExtractionResult = await extractEntities(insertedMemories, containerId)
+  const entityExtractionResult = await extractEntities(insertedMemories, containerId, supabaseClient)
   
   // Collect extraction results and pass them to `entity resolver`
   const {entities: resolvedEntities, relations: resolvedRelations} = 
-    await entityResolver(entityExtractionResult, containerId);
+    await entityResolver(entityExtractionResult, containerId, supabaseClient);
 
 
   // Embeed entities
@@ -74,7 +75,7 @@ export async function runExtractionPipeline(
   
   // Inserter
   logExtractionPipeline('Inserting entities to database...')
-  const entitiesWithEnsuredRefs = await insertEntitiesToDatabase(resolvedEntities, containerId)
+  const entitiesWithEnsuredRefs = await insertEntitiesToDatabase(resolvedEntities, containerId, supabaseClient)
   logExtractionPipeline('Inserted entities to database.')
 
   // First ensure that refs are propagated into relations
@@ -96,7 +97,7 @@ export async function runExtractionPipeline(
   
   // Now insert relations
   logExtractionPipeline('Inserting relations to database...')
-  await insertRelationsToDatabase(resolvedRelations)
+  await insertRelationsToDatabase(resolvedRelations, supabaseClient)
   logExtractionPipeline('Inserted relations to database.')
   
 }

@@ -1,13 +1,13 @@
 import { Memory } from "../../database/memories";
-import { supabaseServiceClient } from "../../database/supabaseServiceClient";
 import { callEntityExtractor } from "../../openrouter/callEntityExtractor";
 import { EntityExtractorResultWithMemoryIdType } from "../pipeline";
 import { logExtractionPipeline } from "../logger/log";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-export async function extractEntities(insertedMemories: Memory[], containerId: string){
+export async function extractEntities(insertedMemories: Memory[], containerId: string, supabaseClient: SupabaseClient){
   logExtractionPipeline("Fetching known entities");
 
-  const knownEntities = await fetchKnownEntities(containerId)
+  const knownEntities = await fetchKnownEntities(containerId, supabaseClient)
 
   logExtractionPipeline("Fetched known entities", knownEntities);
 
@@ -40,10 +40,10 @@ export async function extractEntities(insertedMemories: Memory[], containerId: s
   return entityExtractionResult
 }
 
-async function fetchKnownEntities(containerId: string){
+async function fetchKnownEntities(containerId: string, supabaseClient: SupabaseClient){
   // First get known entities
   const { data: knownEntities, error: knownEntitiesError } =
-    await supabaseServiceClient
+    await supabaseClient
       .from("entities")
       .select(
         `

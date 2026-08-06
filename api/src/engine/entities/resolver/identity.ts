@@ -3,7 +3,7 @@ import { ExtractedEntityType } from "../../../openrouter/callEntityExtractor";
 import { MappedExtractedEntityRelationType, MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType, MappedExtractedEntityRelationWithMentionsAndExternalIdsType, MappedExtractedEntityType, MappedExtractedEntityWithMentionsAndRefType, MappedExtractedEntityWithMentionsType, MappedMemoryEntitiesWithRelationsType } from "./types";
 import {EntityExtractorResultWithMemoryIdType} from '../../pipeline'
 import { logExtractionPipeline } from "../../logger/log";
-import { supabaseServiceClient } from "../../../database/supabaseServiceClient";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 const USER_ENTITY: ExtractedEntityType = {
   type: "USER",
@@ -76,21 +76,23 @@ export function assignLocalIdsToEntityExtraction(
 // EXTERNAL
 export async function assignExternalRefsToEntities(
   entities: MappedExtractedEntityWithMentionsType[],
-  containerId: string
+  containerId: string,
+  supabaseClient: SupabaseClient
 ): Promise<MappedExtractedEntityWithMentionsAndRefType[]> {
   return await Promise.all(
     entities.map(async (entity) => {
-      const externalRef = await assignExternalRefToEntity(entity, containerId);
+      const externalRef = await assignExternalRefToEntity(entity, containerId, supabaseClient);
       return { ...entity, ...(externalRef ? { ref_id: externalRef } : null) };
     }),
   );
 }
 export async function assignExternalRefToRelations(
   relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsType[],
-  containerId: string
+  containerId: string,
+  supabaseClient: SupabaseClient
 ) : Promise<MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[]>{
   return await Promise.all(relations.map(async (relation)=>{
-    const externalRef = await assignExternalRefToRelation(relation, containerId);
+    const externalRef = await assignExternalRefToRelation(relation, containerId, supabaseClient);
     return { ...relation, ...(externalRef ? { ref_id: externalRef } : null) }
   }))
 }
@@ -98,14 +100,15 @@ export async function assignExternalRefToRelations(
 
 async function assignExternalRefToRelation(
   relation: MappedExtractedEntityRelationWithMentionsAndExternalIdsType,
-  containerId: string
+  containerId: string,
+  supabaseClient: SupabaseClient
 ) : Promise<string | null> {
 
   if (!relation.subject_ref_id || !relation.object_ref_id){
     return null
   }
 
-  const { data, error: error } = await supabaseServiceClient.rpc(
+  const { data, error: error } = await supabaseClient.rpc(
     'get_matching_id_for_relation', 
     {
       p_relation_relation: relation.relation,
@@ -125,11 +128,12 @@ async function assignExternalRefToRelation(
 }
 async function assignExternalRefToEntity(
   entity: MappedExtractedEntityWithMentionsType,
-  containerId: string
+  containerId: string,
+  supabaseClient: SupabaseClient
 ): Promise<string | null> {
   // call database to find candidate with the same (canonical_name or aliasMatch) and type.
   // !! THIS IS EXACT REFERENCE FINDER NOT A POSSIBILITY MERGER !!
-  const { data, error: error } = await supabaseServiceClient.rpc(
+  const { data, error: error } = await supabaseClient.rpc(
     'get_matching_id_for_entity', 
     {
       p_entity_type: entity.type,

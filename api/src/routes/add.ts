@@ -48,7 +48,7 @@ app.post("/add", zValidator("json", AddSchema), async (ctx) => {
   // 2. Run background worker used for entity extraction and graph making
   // FOR PoC we will just use standard fire-and-forget approach
 
-  runExtractionPipeline(newMessages, sessionId, containerId);
+  runExtractionPipeline(newMessages, sessionId, containerId, ctx.get('supabase'));
 
   return ctx.json({ error: null }, 200);
 });

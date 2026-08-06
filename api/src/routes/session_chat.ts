@@ -30,7 +30,7 @@ app.get(
       .maybeSingle();
 
     if (error) ctx.json({ error: error.message }, 500);
-    if (!data) ctx.json({ error: "Not authorized" }, 400);
+    if (!data) ctx.json({ error: "Not authorized." }, 400);
 
     // Now that user is within admins, we can call chatter
 

@@ -3,13 +3,15 @@ import { logExtractionPipeline } from "../../logger/log";
 import { checkForDuplicatesInMemoryScope } from "./check";
 import { deduplicateEntitiesInExtractionScope, deduplicateRelationsInExtractionScope } from "./dedup";
 import { assignExternalRefsToEntities, assignExternalRefToRelations, assignLocalIdsToEntityExtraction } from "./identity";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 
 
 // Dedup & assign refs from external source
 export async function entityResolver(
   extractionResult: EntityExtractorResultWithMemoryIdType[],
-  containerId: string
+  containerId: string,
+  supabaseClient: SupabaseClient
 ) {
   // [TODO] We assume that there cannot be an entity with the same name and type in a single memory
   // For that reason first let's check if something like this did happen. If so log it.
@@ -32,7 +34,7 @@ export async function entityResolver(
 
   // External Deduplication - assigning referenced entities from database
   const entitiesWithRefs =
-    await assignExternalRefsToEntities(deduplicatedEntities, containerId);
+    await assignExternalRefsToEntities(deduplicatedEntities, containerId, supabaseClient);
 
   logExtractionPipeline('Results of direct entity deduplication: ', entitiesWithRefs)
   // Assign external entity ids within relations
@@ -47,7 +49,7 @@ export async function entityResolver(
   logExtractionPipeline('Starting assigning external refs to relations')
   // Relations deduplication (direct)
   const relationsWithRefs = 
-    await assignExternalRefToRelations(mappedRelations, containerId)
+    await assignExternalRefToRelations(mappedRelations, containerId, supabaseClient)
   logExtractionPipeline('Results of direct relation deduplication: ', relationsWithRefs)
 
   // After chats with hermes I came to a conclusion that "indirect relation deduper" is "nice to have"

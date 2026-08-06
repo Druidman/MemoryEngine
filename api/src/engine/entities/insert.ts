@@ -1,10 +1,11 @@
-import { supabaseServiceClient } from "../../database/supabaseServiceClient"
 import { MappedExtractedEntityMentionType, MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType, MappedExtractedEntityWithMentionsAndEnsuredRefSchema, MappedExtractedEntityWithMentionsAndEnsuredRefType, MappedExtractedEntityWithMentionsAndRefType } from "./resolver/types"
 import { logExtractionPipeline } from "../logger/log"
+import { SupabaseClient } from "@supabase/supabase-js"
 
 export async function insertEntitiesToDatabase(
   entities: MappedExtractedEntityWithMentionsAndRefType[], 
-  containerId: string
+  containerId: string, 
+  supabaseClient: SupabaseClient
 ) : Promise<MappedExtractedEntityWithMentionsAndEnsuredRefType[]> {
   // if ref id is present this means that entity itself will be inserted as a mention to already existing object
   const readyToInsertEntity = (entity: MappedExtractedEntityWithMentionsAndRefType) => {
@@ -28,7 +29,7 @@ export async function insertEntitiesToDatabase(
 
   // insert entitiesWithoutRefs
   logExtractionPipeline('Inserting entities without refs(new) to database...')
-  const {data: newEntityIds, error: newEntityInsertError} = await supabaseServiceClient
+  const {data: newEntityIds, error: newEntityInsertError} = await supabaseClient
       .from('entities')
       .insert(entitiesWithoutRefs.map((entity)=>readyToInsertEntity(entity)))
       .select('id')
@@ -44,7 +45,7 @@ export async function insertEntitiesToDatabase(
 
   // insert ALL mentions at once. 
   logExtractionPipeline('Inserting entity mentions to database...')
-  const {error: entityMentionsInsertError} = await supabaseServiceClient
+  const {error: entityMentionsInsertError} = await supabaseClient
     .from('entity_mentions')
     .insert([...entitiesWithRefs, ...entitiesWithoutRefs].flatMap((entity: MappedExtractedEntityWithMentionsAndRefType)=>{
       // use ! here as ref_ids are ensured in entitiesWithRefs and previously mapped to entitiesWithoutRefs
@@ -71,7 +72,8 @@ export async function insertEntitiesToDatabase(
 
 
 export async function insertRelationsToDatabase(
-  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[]
+  relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[],
+  supabaseClient: SupabaseClient
 ){
 
   
@@ -79,7 +81,7 @@ export async function insertRelationsToDatabase(
   const relationsWithoutRef = relations.filter((relation)=>!relation.ref_id)
   const relationsWithRef = relations.filter((relation)=>relation.ref_id)
   // Insert relations
-  const {data: relationsWithoutRef_Ids, error: relationInsertError} = await supabaseServiceClient
+  const {data: relationsWithoutRef_Ids, error: relationInsertError} = await supabaseClient
     .from('relations')
     .insert(relationsWithoutRef.map((relation)=>{
       const {
@@ -108,7 +110,7 @@ export async function insertRelationsToDatabase(
   })
 
   // Insert Mentions (relationsWithRef mentions and without ref mentions)
-  const {error: relationMentionsInsertError} = await supabaseServiceClient
+  const {error: relationMentionsInsertError} = await supabaseClient
     .from('relation_mentions')
     .insert([...relationsWithoutRef, ...relationsWithRef].flatMap((relation)=>{
       return relation.mentions.map((mention)=>{
