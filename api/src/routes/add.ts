@@ -1,6 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
 import app from "..";
-import { supabaseServiceClient } from "../database/supabaseServiceClient";
 import { runExtractionPipeline } from "../engine/pipeline";
 import { MessageSchema } from "../types";
 import z from "zod";
@@ -17,7 +16,7 @@ app.post("/add", zValidator("json", AddSchema), async (ctx) => {
   const { newMessages, sessionId, containerId } = ctx.req.valid("json");
 
   // 1. check if session exist
-  const { data: session, error: checkError } = await supabaseServiceClient
+  const { data: session, error: checkError } = await ctx.get('supabase')
     .from("sessions")
     .select("*")
     .eq("id", sessionId)
@@ -35,7 +34,7 @@ app.post("/add", zValidator("json", AddSchema), async (ctx) => {
     );
 
   // 2. Insert New Messages
-  const { error: insertError } = await supabaseServiceClient
+  const { error: insertError } = await ctx.get('supabase')
     .from("session_messages")
     .insert(
       newMessages.map((message) => ({

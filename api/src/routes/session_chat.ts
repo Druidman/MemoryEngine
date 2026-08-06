@@ -23,7 +23,7 @@ app.get(
     const { message } = ctx.req.valid("json");
 
     // check if user is allowed for chat, eg. is admin
-    const { data, error } = await supabaseServiceClient
+    const { data, error } = await ctx.get('supabase')
       .from("admin_users")
       .select("id")
       .eq("user_id", ctx.get("user").id)
@@ -36,7 +36,7 @@ app.get(
 
     // First get conversation history
     const { data: session_messages, error: sessionError } =
-      await supabaseServiceClient
+      await ctx.get('supabase')
         .from("session_messages")
         .select("payload")
         .eq("session_id", session_id);
