@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/app/hooks/useAuth";
-import styles from "@/styles/auth.module.scss";
+import { useAuth } from "@/src/hooks/useAuth";
+import styles from "@/src/styles/auth.module.scss";
 
 export default function SignInPage() {
   const router = useRouter();

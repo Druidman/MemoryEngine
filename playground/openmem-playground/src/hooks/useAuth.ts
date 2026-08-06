@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSupabase } from "./useSupabase"
 import * as z from 'zod'
-import { AuthChangeEvent } from "@supabase/supabase-js"
 
 export const SignInCredsSchema = z.object({
   email: z.email(),

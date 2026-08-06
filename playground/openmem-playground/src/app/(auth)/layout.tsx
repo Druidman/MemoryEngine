@@ -1,7 +1,7 @@
 "use client";
 
-import styles from "@/styles/auth.module.scss";
-import { useAuth } from "../hooks/useAuth";
+import styles from "@/src/styles/auth.module.scss";
+import { useAuth } from "../../hooks/useAuth";
 import { redirect } from "next/navigation";
 import { Loader } from "@mantine/core";
 

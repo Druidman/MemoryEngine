@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/app/hooks/useAuth"
+import { useAuth } from "@/src/hooks/useAuth"
 
 export default function Dashboard(){
   const {signOut} = useAuth()

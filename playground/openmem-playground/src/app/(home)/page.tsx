@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/hooks/useAuth";
-import styles from "@/styles/home.module.scss";
-import { Loader } from "@mantine/core";
+import { useAuth } from "@/src/hooks/useAuth";
+import styles from "@/src/styles/home.module.scss";
 
 export default function Home() {
   const router = useRouter();
