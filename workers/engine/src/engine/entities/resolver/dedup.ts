@@ -2,10 +2,11 @@ import { MappedExtractedEntityRelationType, MappedExtractedEntityRelationWithMen
 
 export function deduplicateEntitiesInExtractionScope(
   mappedExtractedEntities: MappedExtractedEntityType[],
-): MappedExtractedEntityWithMentionsType[] {
+  mappedRelations: MappedExtractedEntityRelationType[]
+): {deduplicatedEntities: MappedExtractedEntityWithMentionsType[], mappedRelationsWithUpdatedIds: MappedExtractedEntityRelationType[]} {
   // key is canon_name + type
   const entities: { [x in string]: MappedExtractedEntityWithMentionsType } = {};
-
+  
   mappedExtractedEntities.forEach((entity) => {
     const idName = entity.canonical_name + entity.type;
 
@@ -13,6 +14,19 @@ export function deduplicateEntitiesInExtractionScope(
       // key exists
       // we need to merge it
       entities[idName] = mergeEntityWithMention(entities[idName], entity);
+
+      // ! id change appeared ! NEW FIX
+      const foundIndex = mappedRelations.findIndex((relation)=>relation.local_subject_id == entity.local_id || relation.local_object_id == entity.local_id)
+      if (foundIndex != -1){
+        if (mappedRelations[foundIndex].local_subject_id == entity.local_id){
+          mappedRelations[foundIndex].local_subject_id = entities[idName].local_id
+        }
+        else if (mappedRelations[foundIndex].local_object_id == entity.local_id){
+          mappedRelations[foundIndex].local_object_id = entities[idName].local_id
+        }
+      }
+      
+
     } else {
       // add new entry
       const {canonical_name, type, ...mention} = entity
@@ -20,10 +34,12 @@ export function deduplicateEntitiesInExtractionScope(
         ...entity,
         mentions: [mention],
       };
+
+      // here no id change appears so we chill
     }
   });
 
-  return Object.values(entities);
+  return {deduplicatedEntities: Object.values(entities), mappedRelationsWithUpdatedIds: mappedRelations}
 }
 
 export function deduplicateRelationsInExtractionScope(

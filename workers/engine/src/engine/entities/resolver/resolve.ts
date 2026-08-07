@@ -25,11 +25,12 @@ export async function entityResolver(
     assignLocalIdsToEntityExtraction(extractionResult);
 
   // Internal Deduplication
-  const deduplicatedEntities = deduplicateEntitiesInExtractionScope(
+  const {deduplicatedEntities, mappedRelationsWithUpdatedIds}  = deduplicateEntitiesInExtractionScope(
     mappedExtractionData.entities,
+    mappedExtractionData.relations
   );
   const deduplicatedRelations = deduplicateRelationsInExtractionScope(
-    mappedExtractionData.relations,
+    mappedRelationsWithUpdatedIds,
   );
 
   // External Deduplication - assigning referenced entities from database
