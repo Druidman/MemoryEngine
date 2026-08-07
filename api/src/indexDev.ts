@@ -2,7 +2,6 @@ import { logger } from 'hono/logger'
 import { authMiddleware } from './middleware'
 import { cors } from 'hono/cors';
 import { app } from './app';
-import { getRequestListener } from '@hono/node-server';
 
 app.use(logger())
 // console.log(app.)
@@ -17,7 +16,9 @@ app.use('*', cors({
 app.use(authMiddleware)
 
 // register routes
+await import('./routes/router')
 
-import './routes/router'
-
-export default getRequestListener(app.fetch)
+export default {
+  port: 3000,
+  fetch: app.fetch
+};

@@ -42,7 +42,6 @@ Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
   ]
 }`
 
-const EXTRACTION_MODEL = getEnv().MEMORY_EXTRACTION_MODEL ?? ""
 
 export const ExtractedMemorySchema = z.object({
   content: z.string(),
@@ -73,7 +72,7 @@ export async function callMemoryExtractor(newMessages: ChatMessages[], previousS
   // Now call the model
 
   const result = await callModel<GeneralModelParams, ExtractedMemoriesType>(
-    EXTRACTION_MODEL,
+    getEnv().MEMORY_EXTRACTION_MODEL ?? "",
     {
       validation_schema: ExtractedMemoriesSchema,
       sys_prompt: SYS_PROMPT,

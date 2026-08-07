@@ -58,7 +58,20 @@ export async function MemoryAddEndpoint(params: AddType, ctx: Context){
   // 2. Run background worker used for entity extraction and graph making
   // FOR PoC we will just use standard fire-and-forget approach
   console.log('RUNNING PIPELINE')
-  runExtractionPipeline(newMessages, sessionId, containerId, ctx.get('supabase'));
+  // runExtractionPipeline(newMessages, sessionId, containerId, ctx.get('supabase'));
+  const response = await fetch(process.env.WORKER_URL!, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: sessionId,
+      containerId: containerId,
+      messages: newMessages,
+      supabaseToken: ctx.get('token'),
+    }),
+  });
+
+  console.log(response.status); // 202
+  console.log(await response.text()); // "queued"
 
   return ctx.json({ error: null }, 200);
 }

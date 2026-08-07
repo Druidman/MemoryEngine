@@ -108,9 +108,6 @@ known_entities:
 }
 `
 
-
-const EXTRACTION_MODEL = getEnv().ENTITY_EXTRACTION_MODEL ?? ""
-
 export const ExtractedEntitySchema = z.object({
   canonical_name: z.string(),
   type: z.string(),
@@ -146,7 +143,7 @@ export async function callEntityExtractor(memory: ExtractedMemoryWithDateType, k
   
   // Now call the model
   const result = await callModel<GeneralModelParams, EntityExtractorResultType>(
-    EXTRACTION_MODEL,
+    getEnv().ENTITY_EXTRACTION_MODEL ?? "",
     {
       messages:[
         {

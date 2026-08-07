@@ -3,10 +3,6 @@ import { getEnv } from "..";
 import { callModel, EmbeddingModelParams } from "./callModel";
 
 
-
-const EMBEDDING_MODEL = getEnv().EMBEDDING_MODEL ?? ""
-
-
 interface EmbeddingEntry {
   textToEmbed: string
 }
@@ -15,7 +11,7 @@ export async function callEmbedder<T extends EmbeddingEntry>(entriesToEmbed: T[]
   
   // Now call the model
   const result = await callModel<EmbeddingModelParams>(
-    EMBEDDING_MODEL,
+    getEnv().EMBEDDING_MODEL ?? "",
     {
       embedding_format: 'float',
       input: entriesToEmbed.map((entry)=>entry.textToEmbed)

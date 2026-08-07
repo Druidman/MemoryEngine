@@ -6,6 +6,7 @@ type Env = {
   Variables: {
     user: User
     supabase: SupabaseClient
+    token: string
   }
 }
 
