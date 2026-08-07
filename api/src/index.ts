@@ -1,8 +1,8 @@
 import { logger } from 'hono/logger'
 import { authMiddleware } from './middleware'
 import { cors } from 'hono/cors';
-
 import { app } from './app';
+
 app.use(logger())
 
 console.log(process.env.APP_URL)
@@ -18,7 +18,4 @@ app.use(authMiddleware)
 // register routes
 await import('./routes/router')
 
-export default { 
-  port: 3004, 
-  fetch: app.fetch, 
-} 
+export default app;
