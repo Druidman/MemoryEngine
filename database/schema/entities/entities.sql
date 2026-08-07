@@ -24,3 +24,55 @@ create table entities (
 );
 
 GRANT ALL ON public.entities TO service_role;
+GRANT SELECT on public.entities to authenticated;
+GRANT DELETE on public.entities to authenticated;
+GRANT UPDATE(canonical_name, type, confidence, aliases, properties, embedding, embedding_model, updated_at) on public.entities to authenticated;
+GRANT INSERT(canonical_name, type, confidence, aliases, properties, embedding, embedding_model, container_id) on public.entities to authenticated;
+
+create policy "entities - user can select his entities"
+on public.entities
+as permissive
+for select
+to authenticated
+using (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);
+create policy "entities - user can insert his entities"
+on public.entities
+as permissive
+for insert
+to authenticated
+with check (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);
+
+create policy "entities - user can delete his entities"
+on public.entities
+as permissive
+for delete
+to authenticated
+using (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);
+
+create policy "entities - user can update his entities"
+on public.entities
+as permissive
+for update
+to authenticated
+using (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+)
+with check (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);

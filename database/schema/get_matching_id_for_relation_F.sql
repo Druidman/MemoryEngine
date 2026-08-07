@@ -22,3 +22,4 @@ e.object_id = p_relation_object_id
 limit 1
 $$;
 grant execute on function public.get_matching_id_for_relation to service_role;
+grant execute on function public.get_matching_id_for_relation to authenticated;

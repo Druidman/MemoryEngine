@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/src/hooks/useAuth";
 import { useContainer, useContainers } from "@/src/hooks/useContainer";
+import ContainerTableViewer from "@/src/components/ContainerTableViewer";
 import styles from "@/src/styles/dashboard.module.scss";
 
 export default function Dashboard() {
@@ -48,10 +49,7 @@ export default function Dashboard() {
         {/* ── Main area (left) ── */}
         <main className={styles.main}>
           {selectedContainerId ? (
-            // ContainerViewer will go here
-            <div className={styles.placeholder}>
-              Container selected: {selectedContainerId}
-            </div>
+            <ContainerTableViewer containerId={selectedContainerId} />
           ) : (
             <div className={styles.placeholder}>
               Select a container from the sidebar

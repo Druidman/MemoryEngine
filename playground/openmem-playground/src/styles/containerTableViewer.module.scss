@@ -1,0 +1,137 @@
+.viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: var(--fg-primary);
+  }
+}
+
+.tabActive {
+  color: var(--fg-primary);
+  border-bottom-color: var(--color-blue);
+}
+
+.tabCount {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  background-color: var(--bg-surface);
+  border-radius: 10px;
+  padding: 0.0625rem 0.4375rem;
+}
+
+/* ── Table ── */
+.tableWrapper {
+  flex: 1;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: 0.5rem 0.875rem;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--fg-primary);
+  vertical-align: top;
+}
+
+.table tbody tr {
+  transition: background-color 0.12s;
+
+  &:hover {
+    background-color: var(--bg-surface);
+  }
+}
+
+.cellPrimary {
+  font-weight: 500;
+  color: var(--fg-primary);
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellMuted {
+  color: var(--fg-muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--fg-primary);
+  background-color: var(--bg-surface);
+  border-radius: var(--border-radius);
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--fg-secondary);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.statusError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.8125rem;
+  color: var(--color-red);
+}

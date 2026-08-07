@@ -28,3 +28,4 @@ and
 limit 1
 $$;
 grant execute on function public.get_matching_id_for_entity to service_role;
+grant execute on function public.get_matching_id_for_entity to authenticated;

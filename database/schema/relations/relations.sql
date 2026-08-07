@@ -17,7 +17,7 @@ create table relations (
   
 
   -- New edge that defines current (newest) state of relationship 
-  superseededes uuid references public.relations(id) on delete set null on update cascade,
+  superseedes uuid references public.relations(id) on delete set null on update cascade,
 
   -- Actual relationship.
   -- !! subject_id -> object_id form !!
@@ -40,3 +40,57 @@ create table relations (
 );
 
 GRANT ALL ON public.relations TO service_role;
+
+GRANT SELECT on public.relations to authenticated;
+GRANT DELETE on public.relations to authenticated;
+GRANT UPDATE(superseedes, confidence, updated_at) on public.relations to authenticated;
+GRANT INSERT(subject_id, object_id, container_id, memory_id, superseedes, confidence) on public.relations to authenticated;
+
+create policy "relations - user can select his relations"
+on public.relations
+as permissive
+for select
+to authenticated
+using (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);
+
+create policy "relations - user can delete his relations"
+on public.relations
+as permissive
+for delete
+to authenticated
+using (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);
+
+create policy "relations - user can insert his relations"
+on public.relations
+as permissive
+for insert
+to authenticated
+with check (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);
+
+create policy "relations - user can update his relations"
+on public.relations
+as permissive
+for update
+to authenticated
+using (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+)
+with check (
+  exists (
+    SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
+  )
+);

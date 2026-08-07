@@ -1,0 +1,169 @@
+/* ── Graph wrapper ── */
+.graphWrapper {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Status messages ── */
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+}
+
+.statusError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-red);
+  font-size: 0.9375rem;
+}
+
+/* ── Custom entity node ── */
+.entityNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  min-width: 100px;
+  text-align: center;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: var(--color-blue);
+  }
+}
+
+.typeBadge {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bg-primary);
+  border-radius: 3px;
+  line-height: 1.4;
+}
+
+.entityName {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--fg-primary);
+  word-break: break-word;
+}
+
+/* ── Controls & MiniMap overrides ── */
+.controls {
+  border-radius: var(--border-radius) !important;
+  overflow: hidden;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.minimap {
+  border-radius: var(--border-radius) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* ── Popover overlay ── */
+.popoverOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Popover ── */
+.popover {
+  width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.popoverTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+
+.popoverClose {
+  background: none;
+  border: none;
+  color: var(--fg-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+
+  &:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
+  }
+}
+
+.popoverBody {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Detail rows ── */
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.detailLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.detailValue {
+  font-size: 0.8125rem;
+  color: var(--fg-primary);
+  text-align: right;
+  word-break: break-all;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.6875rem;
+  color: var(--color-cyan);
+  background-color: var(--bg-primary);
+  padding: 1px 5px;
+  border-radius: 3px;
+}

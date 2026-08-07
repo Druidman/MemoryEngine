@@ -16,6 +16,7 @@ export const EntitySchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
 })
+export type Entity = z.infer<typeof EntitySchema>
 export const EntitiesSchema = z.array(EntitySchema)
 
 export const RelationSchema = z.object({
@@ -30,6 +31,7 @@ export const RelationSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
 })
+export type Relation = z.infer<typeof RelationSchema>
 export const RelationsSchema = z.array(RelationSchema)
 
 export const MemorySchema = z.object({
@@ -44,6 +46,7 @@ export const MemorySchema = z.object({
   created_at: z.string(),
 })
 export const MemoriesSchema = z.array(MemorySchema)
+export type Memory = z.infer<typeof MemorySchema>
 
 export const EntireContainerGraphDataSchema = z.object({
   entities: EntitiesSchema,
@@ -77,13 +80,17 @@ export function useContainer(containerId?: string){
       const {data, error} = await supabaseClient
         .from('entire_container_graph')
         .select('*')
-        .eq('container_id', containerId)
-        .single()
+        .eq('id', containerId)
+        .maybeSingle()
         // .overrideTypes<EntireContainerGraphData[]>()
       
         if (error) throw error
 
-        return data as EntireContainerGraphData
+        return {
+          entities: data?.entities ?? [],
+          relations: data?.relations ?? [],
+          memories: data?.memories ?? [],
+        } as EntireContainerGraphData
       
     },
     staleTime: Infinity, // realtime will refresh

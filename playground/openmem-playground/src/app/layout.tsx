@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "@mantine/core/styles.css";
+import "@xyflow/react/dist/style.css";
 import "./globals.scss";
 
 export const metadata: Metadata = {
