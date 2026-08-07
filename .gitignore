@@ -1,3 +1,5 @@
 .env
 hermes-project/
 venv/
+.vercel
+.env*
