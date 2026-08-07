@@ -1,11 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
-import app from "..";
+import { app } from "../app";
 import z from "zod";
 
 const NewSessionSchema = z.object({
   container_id: z.uuid()
 })
-app.get("/new_session", zValidator("json", NewSessionSchema), async (ctx) => {
+app.post("/new_session", zValidator("json", NewSessionSchema), async (ctx) => {
   const { container_id } = ctx.req.valid("json");
   const { data: session, error } = await ctx.get('supabase')
     .from("sessions")

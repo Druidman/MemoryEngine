@@ -1,26 +1,26 @@
 
-import { getCookie, setCookie } from 'hono/cookie'
-import { createServerClient } from '@supabase/ssr'
+import { setCookie } from 'hono/cookie'
+import { createClient } from '@supabase/supabase-js'
 import { Context } from 'hono'
 
-export function createClient(c: Context) {
-  return createServerClient(
+
+export function createSupabaseClient(token: string) {
+
+
+  return createClient(
     process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_PUBLIC_KEY!,
     {
-      cookies: {
-        getAll: () => {
-          // parse all cookies from the request
-          return Object.entries(getCookie(c)).map(([name, value]) => ({ name, value }))
-        },
-        setAll: (cookies) => {
-          cookies.forEach(({ name, value, options }) => {
-            const { sameSite, encode, ...rest } = options ?? {}
-            const sameSiteValue = typeof sameSite === 'string' ? sameSite : undefined
-            setCookie(c, name, value, { ...rest, sameSite: sameSiteValue })
-          })
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
       },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
     }
+  
   )
 }

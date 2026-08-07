@@ -1,0 +1,246 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-primary);
+  color: var(--fg-primary);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+.signOutBtn {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--fg-primary);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+}
+
+/* ── Body ── */
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Main content area (left) ── */
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.placeholder {
+  color: var(--fg-secondary);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+/* ── Sidebar (right) ── */
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebarTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.addBtn {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  background-color: transparent;
+  border: 1px solid var(--color-blue);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ── Add form ── */
+.addForm {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+}
+
+.tagInput {
+  flex: 1;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--fg-primary);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  outline: none;
+
+  &::placeholder {
+    color: var(--fg-secondary);
+  }
+
+  &:focus {
+    border-color: var(--color-blue);
+  }
+}
+
+.submitBtn {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--bg-primary);
+  background-color: var(--color-blue);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: #4fa3e0;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.cancelBtn {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--fg-secondary);
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+}
+
+/* ── Container list ── */
+.containerList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.375rem 0;
+}
+
+.containerItem {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.12s;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+
+  & + & {
+    border-top: 1px solid var(--border-color);
+  }
+}
+
+.containerItemActive {
+  background-color: var(--bg-surface);
+
+  &:hover {
+    background-color: var(--bg-surface);
+  }
+}
+
+.containerTag {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fg-primary);
+}
+
+.containerMeta {
+  font-size: 0.6875rem;
+  color: var(--fg-secondary);
+  margin-top: 0.125rem;
+}
+
+.emptyState {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--fg-secondary);
+}
+
+.loadingState {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.errorState {
+  padding: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-red);
+}

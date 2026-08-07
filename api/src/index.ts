@@ -1,19 +1,24 @@
-import {Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { authMiddleware } from './middleware'
-import { SupabaseClient, User } from '@supabase/supabase-js'
+import { cors } from 'hono/cors';
 
-
-type Env = {
-  Variables: {
-    user: User
-    supabase: SupabaseClient
-  }
-}
-
-const app = new Hono<Env>()
+import { app } from './app';
 app.use(logger())
+
+console.log(process.env.APP_URL)
+app.use('*', cors({
+  origin: process.env.APP_URL,
+  credentials: true,
+  allowHeaders: ['Content-Type', 'Authorization'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
+
 app.use(authMiddleware)
 
+// register routes
+await import('./routes/router')
 
-export default app
+export default { 
+  port: 3004, 
+  fetch: app.fetch, 
+} 

@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "./useSupabase";
 import * as z from 'zod'
 import { useAuth } from "./useAuth";
+import { getSupabaseAccessTokenHeader } from "../utils/supabase";
 
 export const EntitySchema = z.object({
   id: z.uuid(),
@@ -61,14 +62,17 @@ export const ContainerSchema = z.object({
 export type Container = z.infer<typeof ContainerSchema>
 
 export function useContainer(containerId?: string){
+  const {user} = useAuth()
+  const queryClient = useQueryClient()
   const supabaseClient = useSupabase()
 
   const {
     data: containerData,
     isFetching: isFetchingContainerData,
-    error: containerDataError
+    error: containerDataError,
+    refetch: refetchContainerData
   } = useQuery({
-    queryKey: ['container', containerId, 'data'],
+    queryKey: ['container', user?.id, containerId, 'data'],
     queryFn: async () => {
       const {data, error} = await supabaseClient
         .from('entire_container_graph')
@@ -83,15 +87,32 @@ export function useContainer(containerId?: string){
       
     },
     staleTime: Infinity, // realtime will refresh
-    enabled: !!containerId
+    enabled: !!containerId && !!user?.id
   })
 
-  
+
+  const createContainerMutation = useMutation({
+    mutationFn: async (tag: string) => {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/new_container', {
+        method: 'POST',
+        // credentials: "include",
+        headers: { 'Content-Type': 'application/json', ...(await getSupabaseAccessTokenHeader()) },
+        body: JSON.stringify({ tag }),
+      })
+      if (!response.ok) throw new Error('Failed to create container')
+      return response.json()
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['containers', user?.id] })
+    },
+  })
 
   return {
     containerData,
     isFetchingContainerData,
-    containerDataError
+    containerDataError,
+    refetchContainerData,
+    createContainerMutation,
   }
 }
 
@@ -105,7 +126,7 @@ export function useContainers(){
     isFetching: isFetchingContainers,
     error: containersError
   } = useQuery({
-    queryKey: ['containers', user!.id!],
+    queryKey: ['containers', user?.id],
     queryFn: async ()=>{
       const {data, error} = await supabaseClient  
         .from('containers')

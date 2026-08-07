@@ -12,5 +12,45 @@ create table containers (
 
 GRANT ALL ON public.containers TO service_role;
 
--- FOR DEV RUN (KEEPS PAIN OUT OF YOUR ***)
--- alter table containers alter column owner_id drop not null;
+GRANT select ON public.containers TO authenticated;
+GRANT insert(tag) ON public.containers TO authenticated;
+GRANT update(tag, updated_at) ON public.containers TO authenticated;
+GRANT delete ON public.sessions TO authenticated;
+
+create policy "containers - user can view his assets"
+on public.containers
+as permissive
+for select
+to authenticated
+using (
+  owner_id=auth.uid()
+);
+
+create policy "containers - user can update his assets"
+on public.containers
+as permissive
+for update
+to authenticated
+using (
+  owner_id=auth.uid()
+) with check (
+  owner_id=auth.uid()
+);
+
+create policy "containers - user can insert his assets"
+on public.containers
+as permissive
+for insert
+to authenticated
+with check (
+  owner_id=auth.uid()
+);
+
+create policy "containers - user can delete his assets"
+on public.containers
+as permissive
+for delete
+to authenticated
+using (
+  owner_id=auth.uid()
+);

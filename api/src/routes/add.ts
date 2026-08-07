@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import app from "..";
+import { app } from "../app";
 import { runExtractionPipeline } from "../engine/pipeline";
 import { MessageSchema } from "../types";
 import z from "zod";

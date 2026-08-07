@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import app from "..";
+import { app } from "../app";
 import { supabaseServiceClient } from "../database/supabaseServiceClient";
 import { callModel, GeneralModelParams } from "../openrouter/callModel";
 import z from "zod";
@@ -15,7 +15,7 @@ const CHAT_MODEL_SYS_PROMPT = `
 You are a chat model. That is literally it. Answer as you like it. I don't care
 `;
 
-app.get(
+app.post(
   "/session/:session_id/chat",
   zValidator("json", ChatSessionBodySchema),
   async (ctx) => {
