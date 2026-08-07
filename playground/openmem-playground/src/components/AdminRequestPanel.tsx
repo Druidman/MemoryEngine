@@ -31,6 +31,7 @@ export default function AdminRequestPanel() {
 
       {open && (
         <div className={styles.dropdown}>
+          
           {isFetching && <div className={styles.muted}>Loading…</div>}
 
           {adminRequests && adminRequests.length > 0 && (
@@ -67,7 +68,12 @@ export default function AdminRequestPanel() {
             >
               Send
             </button>
+            
           </div>
+          <div className={styles.adminRequired}>
+              <span className={styles.adminRequiredSub}>or message me on slack: @bober</span>
+            </div>
+          
         </div>
       )}
     </div>

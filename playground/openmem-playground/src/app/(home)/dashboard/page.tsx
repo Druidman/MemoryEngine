@@ -9,7 +9,7 @@ import AdminRequestPanel from "@/src/components/AdminRequestPanel";
 import styles from "@/src/styles/dashboard.module.scss";
 
 export default function Dashboard() {
-  const { signOut, isAdmin } = useAuth();
+  const { signOut, isAdmin, user } = useAuth();
   const { containers, isFetchingContainers, containersError } = useContainers();
   const { createContainerMutation } = useContainer();
 
@@ -43,6 +43,7 @@ export default function Dashboard() {
       <header className={styles.header}>
         <h1 className={styles.headerTitle}>OpenMem</h1>
         {!isAdmin && <AdminRequestPanel />}
+        <span className={styles.userId}>UID: {user?.id?.slice(0, 8)}…<button className={styles.copyBtn} onClick={() => user?.id && navigator.clipboard.writeText(user.id)} title="Copy full UID">📋</button></span>
         <button className={styles.signOutBtn} onClick={handleSignOut}>
           Sign Out
         </button>
@@ -50,7 +51,7 @@ export default function Dashboard() {
 
       <div className={styles.body}>
         {/* ── Chat sidebar (left) ── */}
-        <ChatSidebar key={selectedContainerId ?? "none"} activeContainerId={selectedContainerId} />
+        <ChatSidebar key={selectedContainerId ?? "none"} activeContainerId={selectedContainerId} isAdmin={isAdmin} />
 
         {/* ── Main area (center) ── */}
         <main className={styles.main}>

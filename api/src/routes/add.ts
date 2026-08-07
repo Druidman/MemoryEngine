@@ -14,6 +14,17 @@ export type AddType = z.infer<typeof AddSchema>;
 
 export async function MemoryAddEndpoint(params: AddType, ctx: Context){
   const { newMessages, sessionId, containerId } = params
+
+  // check if admin
+  const { data, error } = await ctx.get('supabase')
+      .from("admin_users")
+      .select("created_at")
+      .eq("user_id", ctx.get("user").id)
+      .maybeSingle();
+
+  if (error) return ctx.json({ error: error.message }, 500);
+  if (!data) return ctx.json({ error: "Not authorized." }, 400);
+
   console.log('ADD MEMORY ENDPOINT')
   // 1. check if session exist
   const { data: session, error: checkError } = await ctx.get('supabase')

@@ -24,8 +24,8 @@ export default function Home() {
     <div className={styles.container}>
       <h1 className={styles.title}>OpenMem Playground</h1>
       <p className={styles.description}>
-        An early stage playground for the OpenMem memory engine. Explore how
-        persistent, structured memory works for AI agents.
+        An early stage playground for the OpenMem memory engine. Currently nothing special
+        just a playground to view what memories, entities, relations engine extracts
       </p>
       <div className={styles.actions}>
         <button

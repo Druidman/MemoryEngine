@@ -6,9 +6,10 @@ import styles from "@/src/styles/chatSidebar.module.scss";
 
 interface ChatSidebarProps {
   activeContainerId?: string | null;
+  isAdmin?: boolean;
 }
 
-export default function ChatSidebar({ activeContainerId }: ChatSidebarProps) {
+export default function ChatSidebar({ activeContainerId, isAdmin }: ChatSidebarProps) {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [showNewForm, setShowNewForm] = useState(false);
@@ -29,6 +30,7 @@ export default function ChatSidebar({ activeContainerId }: ChatSidebarProps) {
           sessionId={selectedSessionId}
           input={input}
           setInput={setInput}
+          isAdmin={isAdmin}
         />
       ) : (
         <div className={styles.chatPlaceholder}>
@@ -140,9 +142,10 @@ interface ChatAreaProps {
   sessionId: string;
   input: string;
   setInput: (v: string) => void;
+  isAdmin?: boolean;
 }
 
-function ChatArea({ containerId, sessionId, input, setInput }: ChatAreaProps) {
+function ChatArea({ containerId, sessionId, input, setInput, isAdmin }: ChatAreaProps) {
   const { sessionData, isFetchingSessionData, getSessionResponse } = useSession(containerId, sessionId);
   const messagesRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
@@ -197,23 +200,30 @@ function ChatArea({ containerId, sessionId, input, setInput }: ChatAreaProps) {
         )}
       </div>
 
-      <div className={styles.inputBar}>
-        <textarea
-          className={styles.inputField}
-          placeholder="Type a message…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-        />
-        <button
-          className={styles.sendBtn}
-          onClick={handleSend}
-          disabled={!input.trim()}
-        >
-          Send
-        </button>
-      </div>
+      {isAdmin ? (
+        <div className={styles.inputBar}>
+          <textarea
+            className={styles.inputField}
+            placeholder="Type a message…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={1}
+          />
+          <button
+            className={styles.sendBtn}
+            onClick={handleSend}
+            disabled={!input.trim()}
+          >
+            Send
+          </button>
+        </div>
+      ) : (
+        <div className={styles.adminRequired}>
+          <span>Admin required</span>
+          <span className={styles.adminRequiredSub}>message me on slack: @bober OR request admin via button</span>
+        </div>
+      )}
     </div>
   );
 }

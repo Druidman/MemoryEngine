@@ -120,3 +120,23 @@
   padding: 0.5rem;
   text-align: center;
 }
+.adminRequired {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-red);
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.adminRequiredSub {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--fg-secondary);
+}
