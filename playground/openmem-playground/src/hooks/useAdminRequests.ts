@@ -4,6 +4,7 @@ import { useSupabase } from "./useSupabase"
 import * as z from 'zod'
 
 export const AdminRequestSchema = z.object({
+  id: z.uuid(),
   message: z.string(),
   user_id: z.uuid(),
   requested_at: z.string()
@@ -21,7 +22,7 @@ export function useAdminRequest(){
     error,
     refetch
   } = useQuery({
-    queryKey: ['admin_requests', user!.id!],
+    queryKey: ['admin_requests', user?.id],
     queryFn: async ()=>{
       const {data, error} = await supabaseClient  
         .from('admin_requests')

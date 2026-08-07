@@ -1,5 +1,6 @@
 create table admin_requests (
-  user_id uuid primary key not null references auth.users(id) on update cascade on delete cascade default auth.uid(),
+  id uuid primary key not null default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on update cascade on delete cascade default auth.uid(),
   message text,
   requested_at timestamp with time zone not null default now()
 );

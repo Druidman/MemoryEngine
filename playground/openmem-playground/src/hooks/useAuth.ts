@@ -21,6 +21,18 @@ export function useAuth(){
     },
     staleTime: 60_000
   })
+
+  const {data: adminUsers} = useQuery({
+    queryKey: ['admins'],
+    queryFn: async ()=>{
+      const {data} = await client
+        .from('admin_users')
+        .select('user_id')
+    
+      return data ?? []
+    },
+    staleTime: 15_000
+  })
   
   const anonymousSignIn = async () => {
     const signInData = await client.auth.signInAnonymously()
@@ -63,8 +75,10 @@ export function useAuth(){
     queryClient.setQueryData(['user'], signUpData.data.user)
   }
   
+  const isAdmin = !!(adminUsers?.find((user)=>user.user_id == user?.user_id))
   return {
     user,
+    isAdmin,
     isFetchingUser,
     refetchUser,
 

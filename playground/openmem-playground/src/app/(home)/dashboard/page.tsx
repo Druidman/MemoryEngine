@@ -5,10 +5,11 @@ import { useAuth } from "@/src/hooks/useAuth";
 import { useContainer, useContainers } from "@/src/hooks/useContainer";
 import ContainerTableViewer from "@/src/components/ContainerTableViewer";
 import ChatSidebar from "@/src/components/ChatSidebar";
+import AdminRequestPanel from "@/src/components/AdminRequestPanel";
 import styles from "@/src/styles/dashboard.module.scss";
 
 export default function Dashboard() {
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const { containers, isFetchingContainers, containersError } = useContainers();
   const { createContainerMutation } = useContainer();
 
@@ -41,6 +42,7 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <header className={styles.header}>
         <h1 className={styles.headerTitle}>OpenMem</h1>
+        {!isAdmin && <AdminRequestPanel />}
         <button className={styles.signOutBtn} onClick={handleSignOut}>
           Sign Out
         </button>
