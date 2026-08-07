@@ -45,6 +45,34 @@
   padding: 0.0625rem 0.4375rem;
 }
 
+.tabsSpacer {
+  flex: 1;
+}
+
+.refreshBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--fg-secondary);
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+  align-self: center;
+  margin-right: 0.5rem;
+
+  &:hover {
+    color: var(--fg-primary);
+    background-color: var(--bg-hover);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
 /* ── Table ── */
 .tableWrapper {
   flex: 1;

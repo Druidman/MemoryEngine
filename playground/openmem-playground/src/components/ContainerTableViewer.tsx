@@ -12,7 +12,7 @@ interface ContainerTableViewerProps {
 }
 
 export default function ContainerTableViewer({ containerId }: ContainerTableViewerProps) {
-  const { containerData, isFetchingContainerData, containerDataError } = useContainer(containerId);
+  const { containerData, isFetchingContainerData, containerDataError, refetchContainerData } = useContainer(containerId);
   const [activeTab, setActiveTab] = useState<Tab>("entities");
 
   if (isFetchingContainerData) {
@@ -46,6 +46,14 @@ export default function ContainerTableViewer({ containerId }: ContainerTableView
             <span className={styles.tabCount}>{tab.count}</span>
           </button>
         ))}
+        <div className={styles.tabsSpacer} />
+        <button
+          className={styles.refreshBtn}
+          onClick={() => refetchContainerData()}
+          disabled={isFetchingContainerData}
+        >
+          ↻
+        </button>
       </div>
 
       <div className={styles.tableWrapper}>
