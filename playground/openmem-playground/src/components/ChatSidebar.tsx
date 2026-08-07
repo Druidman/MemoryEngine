@@ -116,7 +116,7 @@ function SessionPicker({
         {!isFetchingSessions && !sessionsError && sessions?.length === 0 && (
           <div className={styles.statusMuted}>No sessions yet</div>
         )}
-        {sessions?.map((s) => (
+        {sessions?.toSorted((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((s) => (
           <button
             key={s.id}
             className={`${styles.sessionItem} ${selectedSessionId === s.id ? styles.sessionItemActive : ""}`}
@@ -124,7 +124,7 @@ function SessionPicker({
           >
             <span className={styles.sessionId}>{s.id.slice(0, 8)}…</span>
             <span className={styles.sessionDate}>
-              {new Date(s.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+              {new Date(s.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
             </span>
           </button>
         ))}
@@ -145,18 +145,24 @@ interface ChatAreaProps {
 function ChatArea({ containerId, sessionId, input, setInput }: ChatAreaProps) {
   const { sessionData, isFetchingSessionData, getSessionResponse } = useSession(containerId, sessionId);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const [isSending, setIsSending] = useState(false);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or when sending
   useEffect(() => {
     const el = messagesRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [sessionData?.messages]);
+  }, [sessionData?.messages, isSending]);
 
   const handleSend = async () => {
     const content = input.trim();
     if (!content) return;
     setInput("");
-    await getSessionResponse(content);
+    setIsSending(true);
+    try {
+      await getSessionResponse(content);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -179,6 +185,16 @@ function ChatArea({ containerId, sessionId, input, setInput }: ChatAreaProps) {
             <div className={styles.messageContent}>{msg.payload.content}</div>
           </div>
         ))}
+        {isSending && (
+          <div className={`${styles.message} ${styles.messageAssistant}`}>
+            <div className={styles.messageRole}>assistant</div>
+            <div className={styles.typingIndicator}>
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={styles.inputBar}>

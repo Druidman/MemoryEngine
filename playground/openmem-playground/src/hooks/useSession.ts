@@ -85,6 +85,8 @@ export function useSession(containerId: string, sessionId?: string){
 
   const createSessionMutation = useMutation({
     mutationFn: async (containerId: string) => {
+      
+      // call
       const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/new_session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(await getSupabaseAccessTokenHeader()) },
@@ -101,6 +103,24 @@ export function useSession(containerId: string, sessionId?: string){
   const getSessionResponseMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!sessionId) throw new Error('Missing sessionId in a hook')
+      // optimistic update on messages
+      queryClient.setQueryData(['sessions', containerId, sessionId, 'data'] , (prev: SessionData)=>{
+        return {
+          messages: [
+            ...prev.messages, {
+              id: 'OPTIMISTIC', 
+              session_id: sessionId, 
+              payload: {
+                role: 'user',
+                content: content
+              },
+              created_at: new Date().toISOString()
+            }
+
+          ]
+        }
+      })
+      // call
       const response = await fetch(process.env.NEXT_PUBLIC_API_URL + `/session/${sessionId}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(await getSupabaseAccessTokenHeader()) },
@@ -116,6 +136,14 @@ export function useSession(containerId: string, sessionId?: string){
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: ['sessions', containerId, sessionId, 'data'] })
     },
+    onError: () => {
+      queryClient.setQueryData(['sessions', containerId, sessionId, 'data'] , (prev: SessionData)=>{
+        return {
+          messages: prev.messages.filter((message)=>message.id != 'OPTIMISTIC')
+            
+        }
+      })
+    }
   })
 
   return {
