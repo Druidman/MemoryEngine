@@ -110,7 +110,7 @@ export function useContainer(containerId?: string){
       return response.json()
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['containers', user?.id] })
+      await queryClient.refetchQueries({ queryKey: ['containers', user?.id] })
     },
   })
 

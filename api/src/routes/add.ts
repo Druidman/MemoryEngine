@@ -3,6 +3,7 @@ import { app } from "../app";
 import { runExtractionPipeline } from "../engine/pipeline";
 import { MessageSchema } from "../types";
 import z from "zod";
+import { Context } from "hono";
 
 export const AddSchema = z.object({
   newMessages: MessageSchema.array().nonempty(),
@@ -11,10 +12,9 @@ export const AddSchema = z.object({
 });
 export type AddType = z.infer<typeof AddSchema>;
 
-
-app.post("/add", zValidator("json", AddSchema), async (ctx) => {
-  const { newMessages, sessionId, containerId } = ctx.req.valid("json");
-
+export async function MemoryAddEndpoint(params: AddType, ctx: Context){
+  const { newMessages, sessionId, containerId } = params
+  console.log('ADD MEMORY ENDPOINT')
   // 1. check if session exist
   const { data: session, error: checkError } = await ctx.get('supabase')
     .from("sessions")
@@ -46,8 +46,13 @@ app.post("/add", zValidator("json", AddSchema), async (ctx) => {
 
   // 2. Run background worker used for entity extraction and graph making
   // FOR PoC we will just use standard fire-and-forget approach
-
+  console.log('RUNNING PIPELINE')
   runExtractionPipeline(newMessages, sessionId, containerId, ctx.get('supabase'));
 
   return ctx.json({ error: null }, 200);
+}
+
+app.post("/add", zValidator("json", AddSchema), async (ctx) => {
+
+  return await MemoryAddEndpoint(ctx.req.valid("json"), ctx)
 });

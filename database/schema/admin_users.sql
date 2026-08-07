@@ -4,7 +4,7 @@ create table admin_users (
 );
 grant all on public.admin_users to service_role;
 
-grant select on public.admin_users to service_role;
+grant select on public.admin_users to authenticated;
 
 create policy "admin_users - user can view himself"
 on public.admin_users

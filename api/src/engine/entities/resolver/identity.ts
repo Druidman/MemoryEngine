@@ -52,7 +52,7 @@ export function assignLocalIdsToEntityExtraction(
                 ? "Subject"
                 : "Object"
           } not found in mappedEntities array. S/O`;
-          logExtractionPipeline(message, subject, object);
+          logExtractionPipeline(message, subject, object, foundSubject, foundObject);
           throw new Error(message);
         }
 

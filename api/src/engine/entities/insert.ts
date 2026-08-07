@@ -73,6 +73,7 @@ export async function insertEntitiesToDatabase(
 
 export async function insertRelationsToDatabase(
   relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsAndRefType[],
+  containerId: string, 
   supabaseClient: SupabaseClient
 ){
 
@@ -96,6 +97,7 @@ export async function insertRelationsToDatabase(
       } = relation
       return {
         ...formated,
+        container_id: containerId,
         subject_id: subject_ref_id,
         object_id: object_ref_id
       }

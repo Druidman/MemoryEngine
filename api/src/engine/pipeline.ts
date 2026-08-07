@@ -97,8 +97,10 @@ export async function runExtractionPipeline(
   
   // Now insert relations
   logExtractionPipeline('Inserting relations to database...')
-  await insertRelationsToDatabase(resolvedRelations, supabaseClient)
+  await insertRelationsToDatabase(resolvedRelations, containerId, supabaseClient)
   logExtractionPipeline('Inserted relations to database.')
+
+  logExtractionPipeline('END')
   
 }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/src/hooks/useAuth";
 import { useContainer, useContainers } from "@/src/hooks/useContainer";
 import ContainerTableViewer from "@/src/components/ContainerTableViewer";
+import ChatSidebar from "@/src/components/ChatSidebar";
 import styles from "@/src/styles/dashboard.module.scss";
 
 export default function Dashboard() {
@@ -46,7 +47,10 @@ export default function Dashboard() {
       </header>
 
       <div className={styles.body}>
-        {/* ── Main area (left) ── */}
+        {/* ── Chat sidebar (left) ── */}
+        <ChatSidebar key={selectedContainerId ?? "none"} activeContainerId={selectedContainerId} />
+
+        {/* ── Main area (center) ── */}
         <main className={styles.main}>
           {selectedContainerId ? (
             <ContainerTableViewer containerId={selectedContainerId} />

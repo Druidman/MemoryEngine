@@ -17,7 +17,11 @@ SELECT
       where e_r.id=object_id and e_r.container_id = c.id
     )),
     '[]'::jsonb
-  ) as relations
+  ) as relations,
+  coalesce(
+    (SELECT json_agg(m)::jsonb FROM public.memories m WHERE m.container_id=c.id),
+    '[]'::jsonb
+  ) as memories
 FROM 
   public.containers c;
 

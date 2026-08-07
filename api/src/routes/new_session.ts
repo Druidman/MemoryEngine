@@ -15,7 +15,10 @@ app.post("/new_session", zValidator("json", NewSessionSchema), async (ctx) => {
     .select("id")
     .single();
 
-  if (error) return ctx.json({ error: error.message }, 500);
+  if (error) {
+    console.log(error)
+    return ctx.json({ error: error.message }, 500);
+  }
 
   return ctx.json({ error: null, session_id: session.id }, 200);
 });

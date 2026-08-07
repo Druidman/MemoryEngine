@@ -10,15 +10,15 @@ security invoker
 set search_path='public'
 as $$
 SELECT 
-  e.id
-from public.edges e where
-e.container_id=p_container_id 
+  r.id
+from public.relations r where
+r.container_id=p_container_id 
 and
-e.relation = p_relation_relation
+r.relation = p_relation_relation
 and
-e.subject_id = p_relation_subject_id
+r.subject_id = p_relation_subject_id
 and
-e.object_id = p_relation_object_id
+r.object_id = p_relation_object_id
 limit 1
 $$;
 grant execute on function public.get_matching_id_for_relation to service_role;

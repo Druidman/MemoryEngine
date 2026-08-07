@@ -54,3 +54,29 @@ to authenticated
 using (
   owner_id=auth.uid()
 );
+
+
+
+create or replace function auto_insert_user_entity() returns trigger
+language plpgsql
+security definer -- to bypass rls
+set search_path='public'
+as $$
+begin
+  INSERT INTO public.entities (
+    canonical_name,
+    type,
+    confidence,
+    container_id
+  ) VALUES (
+    'user',
+    'USER',
+    1,
+    NEW.id
+  );
+  return NEW;
+end;
+$$;
+
+create trigger auto_insert_user_entity_trg after insert on public.containers 
+for each row execute function auto_insert_user_entity();

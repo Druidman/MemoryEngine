@@ -44,7 +44,7 @@ GRANT ALL ON public.relations TO service_role;
 GRANT SELECT on public.relations to authenticated;
 GRANT DELETE on public.relations to authenticated;
 GRANT UPDATE(superseedes, confidence, updated_at) on public.relations to authenticated;
-GRANT INSERT(subject_id, object_id, container_id, memory_id, superseedes, confidence) on public.relations to authenticated;
+GRANT INSERT(subject_id, object_id, container_id, relation, memory_id, superseedes, confidence) on public.relations to authenticated;
 
 create policy "relations - user can select his relations"
 on public.relations
