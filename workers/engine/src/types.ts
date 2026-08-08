@@ -7,7 +7,3 @@ export const MessageSchema = z.object({
 })
 export type MessageType = z.infer<typeof MessageSchema>
 
-export const UserMessageSchema = z.object({
-  role: z.literal(['user']),
-  content: z.string().nonempty(),
-})

@@ -1,9 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
 import { app } from "../app";
-import { runExtractionPipeline } from "../engine/pipeline";
 import { MessageSchema } from "../types";
 import z from "zod";
 import { Context } from "hono";
+import { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const AddSchema = z.object({
   newMessages: MessageSchema.array().nonempty(),
@@ -70,8 +70,9 @@ export async function MemoryAddEndpoint(params: AddType, ctx: Context){
     }),
   });
 
-  console.log(response.status); // 202
-  console.log(await response.text()); // "queued"
+  if (response.status != 202){
+    return ctx.json({error: await response.text() ?? 'ERROR IN ENGINE WORKER QUEUE'}, 500)
+  }
 
   return ctx.json({ error: null }, 200);
 }

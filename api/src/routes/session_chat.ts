@@ -1,6 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
 import { app } from "../app";
-import { supabaseServiceClient } from "../database/supabaseServiceClient";
 import { callModel, GeneralModelParams } from "../openrouter/callModel";
 import z from "zod";
 import { UserMessageSchema } from "../types";
