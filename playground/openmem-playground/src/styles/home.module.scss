@@ -61,3 +61,13 @@
     background-color: var(--bg-hover);
   }
 }
+
+.github {
+  background-color: var(--bg-surface);
+  color: var(--fg-primary);
+  border-color: var(--border-color);
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg-hover);
+  }
+}
