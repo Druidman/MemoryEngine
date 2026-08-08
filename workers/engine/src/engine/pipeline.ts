@@ -91,6 +91,9 @@ export async function runExtractionPipeline(
   // We assume that local_id from relations will always be found in entityLocalIdHashTable
   // Map refs to relations
   resolvedRelations.forEach((relation)=>{
+    console.log(relation)
+    console.log(entityLocalIdHashTable[relation.local_subject_id].ref_id)
+    console.log(entityLocalIdHashTable[relation.local_object_id].ref_id)
     relation.subject_ref_id = entityLocalIdHashTable[relation.local_subject_id].ref_id
     relation.object_ref_id = entityLocalIdHashTable[relation.local_object_id].ref_id
   })

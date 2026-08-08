@@ -43,6 +43,7 @@ export default function Dashboard() {
       <header className={styles.header}>
         <h1 className={styles.headerTitle}>OpenMem</h1>
         {!isAdmin && <AdminRequestPanel />}
+        <span className={styles.userId}>It may take up to ~2 mins for data to appear in viewer ;D<br/>Also llm extractors hallucinate pretty often :(</span>
         <span className={styles.userId}>UID: {user?.id?.slice(0, 8)}…<button className={styles.copyBtn} onClick={() => user?.id && navigator.clipboard.writeText(user.id)} title="Copy full UID">📋</button></span>
         <button className={styles.signOutBtn} onClick={handleSignOut}>
           Sign Out

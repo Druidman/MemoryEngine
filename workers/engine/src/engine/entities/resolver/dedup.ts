@@ -38,7 +38,17 @@ export function deduplicateEntitiesInExtractionScope(
       // here no id change appears so we chill
     }
   });
-
+  // // check 
+  // mappedRelations.forEach((relation)=>{
+  //   if (relation.subject_id in entities){
+  //     console.log('SUBJECT NOT FOUND FOR RELATION')
+  //     console.log(relation)
+  //   }
+  //   if (relation.object_id in entities){
+  //     console.log('OBJECT NOT FOUND FOR RELATION')
+  //     console.log(relation)
+  //   }
+  // })
   return {deduplicatedEntities: Object.values(entities), mappedRelationsWithUpdatedIds: mappedRelations}
 }
 

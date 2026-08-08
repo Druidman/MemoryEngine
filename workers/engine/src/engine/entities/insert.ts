@@ -65,6 +65,14 @@ export async function insertEntitiesToDatabase(
   // We don't care about mention ids as they are useless.
   // However we do care about inserting relations which require entity id.
   // After mapping in previous steps we can return merge of those arrays and these would ensure that ref_id is present
+
+  // check
+  // [...entitiesWithRefs, ...entitiesWithoutRefs].forEach((entity)=>{
+  //   if (!entity.ref_id) {
+  //     console.log('NO REF FOR')
+  //     console.log(entity)
+  //   }
+  // })
   return [...entitiesWithRefs, ...entitiesWithoutRefs] as MappedExtractedEntityWithMentionsAndEnsuredRefType[]
 
 
