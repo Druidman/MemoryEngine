@@ -1,1 +1,1 @@
-select vault.create_secret('< ! secret here ! >', 'INSTANT_ADMIN_USER_CODE', 'Used for auto assignment of admins for users');
+select vault.create_secret('< ! FREE_AUTO_ADMIN_CODE - from .env ! >', 'INSTANT_ADMIN_USER_CODE', 'Used for auto assignment of admins for users');
