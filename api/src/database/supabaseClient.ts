@@ -1,7 +1,5 @@
 
-import { setCookie } from 'hono/cookie'
 import { createClient } from '@supabase/supabase-js'
-import { Context } from 'hono'
 
 
 export function createSupabaseClient(token: string) {

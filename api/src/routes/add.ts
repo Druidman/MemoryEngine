@@ -3,7 +3,6 @@ import { app } from "../app";
 import { MessageSchema } from "../types";
 import z from "zod";
 import { Context } from "hono";
-import { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const AddSchema = z.object({
   newMessages: MessageSchema.array().nonempty(),

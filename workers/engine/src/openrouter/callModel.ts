@@ -41,6 +41,7 @@ interface EmbeddingModelResponse {
 export interface EmbeddingModelParams {
   input: string | string[],
   embedding_format: 'float' // only this supported
+  dimensions: number
 }
 const MAX_RETRIES = 3
 export async function callModel<I extends GeneralModelParams | EmbeddingModelParams, R=unknown>(

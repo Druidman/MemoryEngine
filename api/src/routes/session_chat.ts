@@ -36,15 +36,15 @@ app.post(
 
     // Get session itself
     // get container id
-    const {data: session, error: containerError} = await ctx.get('supabase')
+    const { data: session, error: containerError } = await ctx.get('supabase')
       .from('sessions')
       .select('container_id')
       .eq('id', session_id)
       .single()
 
-    if (containerError){
+    if (containerError) {
       console.log(containerError)
-      return ctx.json({error: "Session was not found"}, 500)
+      return ctx.json({ error: "Session was not found" }, 500)
     }
 
     // First get conversation history
@@ -69,14 +69,14 @@ app.post(
       "/session/:session_id/chat endpoint",
     );
     console.log(res)
-    
+
     const memoryAddRes = await MemoryAddEndpoint({
-      sessionId: session_id, 
+      sessionId: session_id,
       containerId: session.container_id,
-      newMessages: [message, {role: 'assistant', content: res.message as string}]
+      newMessages: [message, { role: 'assistant', content: res.message as string }]
     }, ctx)
 
-    if (memoryAddRes.status != 200){
+    if (memoryAddRes.status != 200) {
       return memoryAddRes
     }
 

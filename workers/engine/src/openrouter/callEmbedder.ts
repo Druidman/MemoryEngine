@@ -14,6 +14,7 @@ export async function callEmbedder<T extends EmbeddingEntry>(entriesToEmbed: T[]
     getEnv().EMBEDDING_MODEL ?? "",
     {
       embedding_format: 'float',
+      dimensions: getEnv().EMBEDDING_MODEL_DIMS,
       input: entriesToEmbed.map((entry)=>entry.textToEmbed)
     },
     "callEntityExtractor"
