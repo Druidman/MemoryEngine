@@ -4,6 +4,7 @@ import { checkForDuplicatesInMemoryScope } from "./check";
 import { deduplicateEntitiesInExtractionScope, deduplicateRelationsInExtractionScope } from "./dedup";
 import { assignExternalRefsToEntities, assignExternalRefToRelations, assignLocalIdsToEntityExtraction } from "./identity";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { MappedExtractedEntityRelationWithMentionsType } from "./types";
 
 
 
@@ -25,7 +26,7 @@ export async function entityResolver(
     assignLocalIdsToEntityExtraction(extractionResult);
 
   // Internal Deduplication
-  const {deduplicatedEntities, mappedRelationsWithUpdatedIds}  = deduplicateEntitiesInExtractionScope(
+  const {deduplicatedEntities, mappedRelationsWithUpdatedIds} = deduplicateEntitiesInExtractionScope(
     mappedExtractionData.entities,
     mappedExtractionData.relations
   );

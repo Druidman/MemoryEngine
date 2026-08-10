@@ -1,6 +1,21 @@
 import * as z from 'zod'
 import { getEnv } from '..';
 // Generics in here are kinda crazyyyyyy xD
+interface OpenRouterCompletion {
+  id: string;
+  choices: {
+    message: ChatAssistantMessage;
+    finish_reason: string;
+  }[];
+  // ...
+}
+interface OpenRouterEmbedding {
+  data: {
+    embedding: number[],
+    index: number,
+    object: 'embedding'
+  }[]
+}
 
 export type ChatAssistantMessage = {
 
@@ -118,7 +133,7 @@ async function callGeneralModel(model: string, sys_prompt: string, messages: Cha
         }
       },
     } : null)
-  })
+  }) as OpenRouterCompletion
 
   const raw = completion.choices[0].message.content as string;
  
@@ -136,7 +151,7 @@ async function callEmbeddingModel(model: string, input: string | string[], embed
     model: model,
     input: input,
     encoding_format: embedding_format
-  })
+  }) as OpenRouterEmbedding
   
   return {embeddings: data.data} as any
 }

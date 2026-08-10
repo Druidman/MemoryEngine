@@ -1,4 +1,4 @@
-import { MappedExtractedEntityRelationType, MappedExtractedEntityRelationWithMentionsType, MappedExtractedEntityType, MappedExtractedEntityWithMentionsType } from "../../pipeline";
+import { MappedExtractedEntityRelationType, MappedExtractedEntityRelationWithMentionsType, MappedExtractedEntityType, MappedExtractedEntityWithMentionsType } from "./types";
 
 export function deduplicateEntitiesInExtractionScope(
   mappedExtractedEntities: MappedExtractedEntityType[],
