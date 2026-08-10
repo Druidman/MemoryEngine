@@ -39,7 +39,7 @@ export async function entityResolver(
 
   logExtractionPipeline('Results of direct entity deduplication: ', entitiesWithRefs)
   // Assign external entity ids within relations
-  const mappedRelations = deduplicatedRelations.map((relation)=>{
+  const mappedRelations: MappedExtractedEntityRelationWithMentionsType[] = deduplicatedRelations.map((relation)=>{
     return {
       ...relation,
       subject_ref_id: entitiesWithRefs.find((entity)=>entity.local_id == relation.local_subject_id)?.ref_id,

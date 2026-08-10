@@ -68,10 +68,6 @@ export async function runExtractionPipeline(
   // Collect extraction results and pass them to `entity resolver`
   const {entities: resolvedEntities, relations: resolvedRelations} = 
     await entityResolver(entityExtractionResult, containerId, supabaseClient);
-
-
-  // Embeed entities
-  // await addEmbeddingForEntities()
   
   // Inserter
   logExtractionPipeline('Inserting entities to database...')
@@ -102,6 +98,10 @@ export async function runExtractionPipeline(
   logExtractionPipeline('Inserting relations to database...')
   await insertRelationsToDatabase(resolvedRelations, containerId, supabaseClient)
   logExtractionPipeline('Inserted relations to database.')
+
+
+
+  
 
   logExtractionPipeline('END')
   

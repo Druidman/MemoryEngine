@@ -23,7 +23,9 @@ export async function insertEntitiesToDatabase(
     }
   }
 
+  // new ones 
   const entitiesWithoutRefs = entities.filter((entity)=>!entity.ref_id)
+  
   const entitiesWithRefs = entities.filter((entity)=>entity.ref_id)
 
 
