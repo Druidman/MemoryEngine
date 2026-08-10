@@ -40,6 +40,7 @@ export const MappedExtractedEntityWithMentionsSchema =
 export const MappedExtractedEntityWithMentionsAndRefSchema =
   MappedExtractedEntityWithMentionsSchema.extend({
     ref_id: z.uuid().optional(), // id of reference entity from database
+    is_new: z.boolean().default(false)
   });
 export const MappedExtractedEntityRelationWithMentionsSchema =
   MappedExtractedEntityRelationSchema.extend({
@@ -63,6 +64,7 @@ export const MappedExtractedEntityWithMentionsAndEnsuredRefSchema = MappedExtrac
   .omit({
     ref_id: true
   }).extend({
+    is_new: z.boolean(),
     ref_id: z.uuid() // non optional
   })
 // TYPES

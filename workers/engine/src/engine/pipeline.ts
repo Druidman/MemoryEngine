@@ -18,6 +18,7 @@ import { insertEntitiesToDatabase, insertRelationsToDatabase } from "./entities/
 import { entityResolver } from "./entities/resolver/resolve";
 import { MappedExtractedEntityWithMentionsAndEnsuredRefType } from "./entities/resolver/types";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { addEmbeddingForEntities } from "./entities/embed";
 
 export const EntityExtractorResultWithMemoryIdSchema =
   EntityExtractorResultSchema.extend({
@@ -100,8 +101,10 @@ export async function runExtractionPipeline(
   logExtractionPipeline('Inserted relations to database.')
 
 
-
-  
+  // Embed entities now (after they are inserted all have refs so we will just update)
+  logExtractionPipeline('Starting embedding of entities...')
+  await addEmbeddingForEntities(entitiesWithEnsuredRefs, supabaseClient)
+  logExtractionPipeline('Finished embedding of entities...')
 
   logExtractionPipeline('END')
   

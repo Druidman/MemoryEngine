@@ -22,10 +22,14 @@ export async function insertEntitiesToDatabase(
       entity_id: entity_id
     }
   }
+  // hande is_new
+  entities.forEach((entity)=>{
+    entity.is_new = entity?.ref_id ? false : true
+  })
 
   // new ones 
   const entitiesWithoutRefs = entities.filter((entity)=>!entity.ref_id)
-  
+
   const entitiesWithRefs = entities.filter((entity)=>entity.ref_id)
 
 
