@@ -73,7 +73,7 @@ Promise<
     
     if ('embedding_format' in model_query_params){
       // embedding model
-      return await callEmbeddingModel(model, model_query_params.input, model_query_params.embedding_format)
+      return await callEmbeddingModel(model, model_query_params.input, model_query_params.dimensions, model_query_params.embedding_format)
     }
     else if ('sys_prompt' in model_query_params){
       // general model
@@ -96,8 +96,8 @@ Promise<
   
 }
 
-async function callOpenRouterModel(body: {}){
-  const response =  await fetch("https://openrouter.ai/api/v1/chat/completions", {
+async function callOpenRouterModel(body: {}, destination: string = '/chat/completions'){
+  const response =  await fetch(`https://openrouter.ai/api/v1${destination}`, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${getEnv().OPENROUTER_API_KEY}`,
@@ -146,12 +146,14 @@ async function callGeneralModel(model: string, sys_prompt: string, messages: Cha
   } as any;
 }
 
-async function callEmbeddingModel(model: string, input: string | string[], embedding_format: 'float'){
+async function callEmbeddingModel(model: string, input: string | string[],  dimensions: number, embedding_format: 'float'){
+  
   const data = await callOpenRouterModel({
     model: model,
     input: input,
+    dimensions: dimensions,
     encoding_format: embedding_format
-  }) as OpenRouterEmbedding
+  }, '/embeddings') as OpenRouterEmbedding
   
   return {embeddings: data.data} as any
 }

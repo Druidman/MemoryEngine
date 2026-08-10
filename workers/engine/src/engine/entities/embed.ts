@@ -10,6 +10,7 @@ export async function addEmbeddingForEntities(entities: MappedExtractedEntityWit
       ...entity,
       textToEmbed: `${entity.canonical_name}[${entity.type}]`
     }))
+  console.log(entitiesToEmbed)
 
   logExtractionPipeline('Calling embedder model...')
   const embeddedEntities = await callEmbedder(entitiesToEmbed)
@@ -17,16 +18,17 @@ export async function addEmbeddingForEntities(entities: MappedExtractedEntityWit
 
   logExtractionPipeline('Starting updating entities in db...')
   // update
-  const {error} = await supabaseClient  
-    .from('entities')
-    .update(embeddedEntities.map((entity)=>({
+  const {error} = await supabaseClient 
+    .rpc('update_entities_embeddings', {p_entities: embeddedEntities.map((entity)=>({
       id: entity.ref_id,
       embedding: entity.embedding,
       embedding_model: entity.embeddingModel
-    })))
-  logExtractionPipeline('Updated entity embeddings in db to db...')
+    }))})
 
   if (error) throw error
+  logExtractionPipeline('Updated entity embeddings in db...')
+
+  
 
   return embeddedEntities
 }

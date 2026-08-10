@@ -103,7 +103,8 @@ export async function runExtractionPipeline(
 
   // Embed entities now (after they are inserted all have refs so we will just update)
   logExtractionPipeline('Starting embedding of entities...')
-  await addEmbeddingForEntities(entitiesWithEnsuredRefs, supabaseClient)
+  console.log(entitiesWithEnsuredRefs)
+  await addEmbeddingForEntities(entitiesWithEnsuredRefs.filter((entity)=>entity.is_new), supabaseClient)
   logExtractionPipeline('Finished embedding of entities...')
 
   logExtractionPipeline('END')

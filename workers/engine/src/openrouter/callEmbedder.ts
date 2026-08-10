@@ -19,7 +19,7 @@ export async function callEmbedder<T extends EmbeddingEntry>(entriesToEmbed: T[]
       dimensions: Number(getEnv().EMBEDDING_MODEL_DIMS),
       input: entriesToEmbed.map((entry)=>entry.textToEmbed)
     },
-    "callEntityExtractor"
+    "callEmbedder"
   )
   
   return entriesToEmbed.map((entry, idx)=>({

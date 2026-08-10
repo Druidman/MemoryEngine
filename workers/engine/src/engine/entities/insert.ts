@@ -9,7 +9,7 @@ export async function insertEntitiesToDatabase(
 ) : Promise<MappedExtractedEntityWithMentionsAndEnsuredRefType[]> {
   // if ref id is present this means that entity itself will be inserted as a mention to already existing object
   const readyToInsertEntity = (entity: MappedExtractedEntityWithMentionsAndRefType) => {
-    const {mentions, local_id, ref_id, memory_id, ...rest} = entity
+    const {mentions, local_id, ref_id, memory_id, is_new, ...rest} = entity
     return {
       ...rest,
       container_id: containerId
@@ -24,6 +24,7 @@ export async function insertEntitiesToDatabase(
   }
   // hande is_new
   entities.forEach((entity)=>{
+    console.log(entity)
     entity.is_new = entity?.ref_id ? false : true
   })
 
