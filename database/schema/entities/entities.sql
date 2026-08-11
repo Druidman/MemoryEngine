@@ -13,6 +13,9 @@ create table entities (
 
   -- Assignment
   container_id uuid not null references public.containers(id) on update cascade on delete cascade,
+
+  -- Merger ran on this entity
+  attempted_merge_at timestamp with time zone default null,
   
 
   created_at timestamp with time zone not null default now(),
