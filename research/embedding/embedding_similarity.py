@@ -79,12 +79,10 @@ def main():
         # Sort by similarity descending
         pairs.sort(key=lambda x: x[0], reverse=True)
     
-        # print("Cosine similarities (sorted high → low):\n")
-        # for score, t1, t2 in pairs:
-        #     print(f"  {score:.4f}  |  {t1!r}  ↔  {t2!r}")
+
     
         # Also show the full matrix
-        # print("\nFull similarity matrix:\n")
+    
         header = "         " + "  ".join(f"  T{i}  " for i in range(len(texts)))
         print(header)
         for i, row in enumerate(sim):
