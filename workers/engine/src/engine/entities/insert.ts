@@ -22,16 +22,12 @@ export async function insertEntitiesToDatabase(
       entity_id: entity_id
     }
   }
-  // hande is_new
-  entities.forEach((entity)=>{
-    console.log(entity)
-    entity.is_new = entity?.ref_id ? false : true
-  })
-
+ 
+  
   // new ones 
   const entitiesWithoutRefs = entities.filter((entity)=>!entity.ref_id)
 
-  const entitiesWithRefs = entities.filter((entity)=>entity.ref_id)
+  const entitiesWithRefs = entities.filter((entity): entity is MappedExtractedEntityWithMentionsAndEnsuredRefType =>!!entity.ref_id)
 
 
   // insert entitiesWithoutRefs
@@ -45,16 +41,22 @@ export async function insertEntitiesToDatabase(
     logExtractionPipeline('Error when inserting new entities into db.', newEntityInsertError)
     throw newEntityInsertError
   }
-  // map ids to entitiesWithoutRefs mentions
-  entitiesWithoutRefs.forEach((element, index)=>{
-    element.ref_id = newEntityIds[index].id
-  })
+
+
+  const resolvedEntities = entitiesWithRefs.concat(entitiesWithoutRefs.map((element, index)=>{
+    return {
+      ...element,
+      ref_id: newEntityIds[index].id
+    }
+  }))
+
+  
 
   // insert ALL mentions at once. 
   logExtractionPipeline('Inserting entity mentions to database...')
   const {error: entityMentionsInsertError} = await supabaseClient
     .from('entity_mentions')
-    .insert([...entitiesWithRefs, ...entitiesWithoutRefs].flatMap((entity: MappedExtractedEntityWithMentionsAndRefType)=>{
+    .insert(resolvedEntities.flatMap((entity: MappedExtractedEntityWithMentionsAndRefType)=>{
       // use ! here as ref_ids are ensured in entitiesWithRefs and previously mapped to entitiesWithoutRefs
       
       return entity.mentions.map((mention)=>{
@@ -73,14 +75,7 @@ export async function insertEntitiesToDatabase(
   // However we do care about inserting relations which require entity id.
   // After mapping in previous steps we can return merge of those arrays and these would ensure that ref_id is present
 
-  // check
-  // [...entitiesWithRefs, ...entitiesWithoutRefs].forEach((entity)=>{
-  //   if (!entity.ref_id) {
-  //     console.log('NO REF FOR')
-  //     console.log(entity)
-  //   }
-  // })
-  return [...entitiesWithRefs, ...entitiesWithoutRefs] as MappedExtractedEntityWithMentionsAndEnsuredRefType[]
+  return resolvedEntities
 
 
 }

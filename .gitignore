@@ -3,3 +3,4 @@ hermes-project/
 venv/
 .vercel
 .env*
+__pycache__/

@@ -82,7 +82,7 @@ export async function assignExternalRefsToEntities(
   return await Promise.all(
     entities.map(async (entity) => {
       const externalRef = await assignExternalRefToEntity(entity, containerId, supabaseClient);
-      return { ...entity, ...(externalRef ? { ref_id: externalRef } : null) };
+      return { ...entity, ...(externalRef ? { ref_id: externalRef, is_new: false } : {is_new: true}) };
     }),
   );
 }
