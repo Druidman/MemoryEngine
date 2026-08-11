@@ -1,0 +1,25 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "openmem-chatparser",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-07",
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true,
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"queues": {
+		"producers": [
+			{ "queue": "openmem-engine-chatparser-messages", "binding": "QUEUE" }
+		],
+		"consumers": [
+      { "queue": "openmem-engine-chatparser-messages", "max_batch_size": 10, "max_batch_timeout": 5 }
+    ]
+	}
+}

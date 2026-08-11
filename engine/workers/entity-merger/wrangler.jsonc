@@ -4,24 +4,30 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "engine",
+	"name": "entity-merger",
 	"main": "src/index.ts",
-	"compatibility_date": "2026-08-07",
+	"compatibility_date": "2026-08-11",
 	"observability": {
 		"enabled": true
+	},
+	"queues": {
+		"consumers": [
+			{
+				"queue": "openmem-engine-entity-merger-entities"
+				, "max_batch_size": 10, "max_batch_timeout": 5
+			}
+		],
+		"producers": [
+			{
+				"binding": "QUEUE",
+				"queue": "openmem-engine-entity-merger-entities"
+			}
+		]
 	},
 	"upload_source_maps": true,
 	"compatibility_flags": [
 		"nodejs_compat"
-	],
-	"queues": {
-		"producers": [
-			{ "queue": "engine-background-jobs", "binding": "QUEUE" }
-		],
-		"consumers": [
-      { "queue": "engine-background-jobs", "max_batch_size": 10, "max_batch_timeout": 30 }
-    ]
-	}
+	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

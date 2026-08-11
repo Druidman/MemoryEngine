@@ -7,7 +7,9 @@ import os
 import sys
 import numpy as np
 import requests
+from dotenv import load_dotenv
 
+load_dotenv()
 API_KEY = os.environ.get("OPENROUTER_API_KEY")
 if not API_KEY:
     sys.exit("Set OPENROUTER_API_KEY environment variable first.")
@@ -62,7 +64,8 @@ def main():
             formatEntity('rust', 'PROGRAMMING_LANGUAGE', technique),
             formatEntity('rust', 'CONCEPT', technique),
             formatEntity('rust', 'TECHNOLOGY', technique),
-            formatEntity('rust', 'GAME', technique)
+            formatEntity('rust', 'GAME', technique),
+            formatEntity('c++', 'PROGRAMMING_LANGUAGE', technique)
         ]
 
         print(f"Embedding {len(texts)} texts using: '{technique}' formating technique...\n")
