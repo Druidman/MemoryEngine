@@ -13,14 +13,22 @@ if not API_KEY:
     sys.exit("Set OPENROUTER_API_KEY environment variable first.")
 
 MODEL = "qwen/qwen3-embedding-8b"  # swap to any model OpenRouter supports
-
-texts = [
-    "ENTITY: rust, TYPE: PROGRAMMING_LANGUAGE",
-"ENTITY: rust, TYPE: CONCEPT",
-"ENTITY: rust, TYPE: TECHNOLOGY",
-"ENTITY: rust, TYPE: GAME"
-
+FORMATTING_TECHNIQUES = [
+    'minimal',
+    'explicit',
+    'informative'
 ]
+
+def formatEntity(name: str, type: str, technique: str) -> str :
+    if technique == 'informative':
+        return f'ENTITY: {name}, TYPE: {type}'
+    elif technique == 'minimal':
+        return f'{name}[{type}]'
+    elif technique == 'explicit':
+        return f'{type} {name}'
+    else:
+        raise Error('WRONG FORMATTING TECHNIQUE')
+
 
 
 def embed(texts: list[str], model: str = MODEL) -> np.ndarray:
@@ -49,31 +57,39 @@ def cosine_similarity_matrix(vecs: np.ndarray) -> np.ndarray:
 
 def main():
     print(f"Model: {MODEL}")
-    print(f"Embedding {len(texts)} texts...\n")
+    for technique in FORMATTING_TECHNIQUES:
+        texts = [
+            formatEntity('rust', 'PROGRAMMING_LANGUAGE', technique),
+            formatEntity('rust', 'CONCEPT', technique),
+            formatEntity('rust', 'TECHNOLOGY', technique),
+            formatEntity('rust', 'GAME', technique)
+        ]
 
-    vecs = embed(texts)
-    sim = cosine_similarity_matrix(vecs)
-
-    # Collect all upper-triangle pairs (skip diagonal)
-    pairs = []
-    for i in range(len(texts)):
-        for j in range(i + 1, len(texts)):
-            pairs.append((sim[i][j], texts[i], texts[j]))
-
-    # Sort by similarity descending
-    pairs.sort(key=lambda x: x[0], reverse=True)
-
-    print("Cosine similarities (sorted high → low):\n")
-    for score, t1, t2 in pairs:
-        print(f"  {score:.4f}  |  {t1!r}  ↔  {t2!r}")
-
-    # Also show the full matrix
-    print("\nFull similarity matrix:\n")
-    header = "         " + "  ".join(f"  T{i}  " for i in range(len(texts)))
-    print(header)
-    for i, row in enumerate(sim):
-        vals = "  ".join(f"{v:.3f}" for v in row)
-        print(f"  T{i}  [{vals}]")
+        print(f"Embedding {len(texts)} texts using: '{technique}' formating technique...\n")
+    
+        vecs = embed(texts)
+        sim = cosine_similarity_matrix(vecs)
+    
+        # Collect all upper-triangle pairs (skip diagonal)
+        pairs = []
+        for i in range(len(texts)):
+            for j in range(i + 1, len(texts)):
+                pairs.append((sim[i][j], texts[i], texts[j]))
+    
+        # Sort by similarity descending
+        pairs.sort(key=lambda x: x[0], reverse=True)
+    
+        # print("Cosine similarities (sorted high → low):\n")
+        # for score, t1, t2 in pairs:
+        #     print(f"  {score:.4f}  |  {t1!r}  ↔  {t2!r}")
+    
+        # Also show the full matrix
+        # print("\nFull similarity matrix:\n")
+        header = "         " + "  ".join(f"  T{i}  " for i in range(len(texts)))
+        print(header)
+        for i, row in enumerate(sim):
+            vals = "  ".join(f"{v:.3f}" for v in row)
+            print(f"  T{i}  [{vals}]")
 
 
 if __name__ == "__main__":
