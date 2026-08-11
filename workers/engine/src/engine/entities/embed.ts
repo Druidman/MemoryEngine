@@ -8,7 +8,7 @@ export async function addEmbeddingForEntities(entities: MappedExtractedEntityWit
   const entitiesToEmbed: (MappedExtractedEntityWithMentionsAndEnsuredRefType & EmbeddingEntry)[] = entities
     .map((entity)=>({
       ...entity,
-      textToEmbed: `${entity.canonical_name}[${entity.type}]`
+      textToEmbed: `ENTITY: ${entity.canonical_name}, TYPE: ${entity.type}`
     }))
   console.log(entitiesToEmbed)
 
