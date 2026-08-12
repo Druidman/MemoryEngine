@@ -16,6 +16,7 @@ create table entities (
 
   -- Merger ran on this entity
   attempted_merge_at timestamp with time zone default null,
+  status text not null default 'awaiting_merge',
   
 
   created_at timestamp with time zone not null default now(),
@@ -23,6 +24,12 @@ create table entities (
 
   constraint entities_confidence check (
     confidence > 0 AND confidence <= 1
+  ),
+
+  constraint status_constraint check (
+    (status = 'awaiting_merge') OR
+    (status = 'queued_for_merge') OR
+    (status = 'ingested')
   )
 );
 
@@ -80,10 +87,3 @@ with check (
   )
 );
 
-
--- Cron for marger
-SELECT cron.schedule(
-       'merge-entities',
-       '30 seconds',
-       'CALL merge_entities()'
-);
