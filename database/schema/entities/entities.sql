@@ -79,3 +79,11 @@ with check (
     SELECT 1 from public.containers c where c.id=container_id and c.owner_id=auth.uid()
   )
 );
+
+
+-- Cron for marger
+SELECT cron.schedule(
+       'merge-entities',
+       '30 seconds',
+       'CALL merge_entities()'
+);
