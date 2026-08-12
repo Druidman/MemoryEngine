@@ -7,4 +7,11 @@ export default {
 	async queue(batch, env): Promise<void> {
 		
 	},
+	async scheduled(
+		controller: ScheduledController,
+		env: Env,
+		ctx: ExecutionContext,
+	) {
+		console.log("cron processed");
+	}
 } satisfies ExportedHandler<Env, Error>;
