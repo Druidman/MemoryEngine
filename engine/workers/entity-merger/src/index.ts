@@ -32,8 +32,15 @@ export default {
 			return;
 		}
 
-			
-		await env.QUEUE.send({entities: data});
+		// now we need to mark them as queued for merge 
+		
+		const {error: updateError} = await createSupabaseServiceClient()
+			.rpc('update_entities_status', {p_entities: data.map((entity)=>({id: entity.id, status: 'queued_for_merge'}))})
+
+		if (updateError) throw updateError
+
+
+		await env.QUEUE.send({entities: data.map((entity)=>({...entity, status: 'queued_for_merge'}))});
 		
 	}
 } satisfies ExportedHandler<Env, Error>;
