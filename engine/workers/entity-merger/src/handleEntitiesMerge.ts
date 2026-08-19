@@ -16,6 +16,8 @@ export async function handleEntitiesMerge(entities: Entity[]){
 
 
     // now after verifying the data we can move onto actual merging schematics
+    // we will first take the data and compare embeddings through each other. (server side compute because why waste db energy)
+    
 
 
 }

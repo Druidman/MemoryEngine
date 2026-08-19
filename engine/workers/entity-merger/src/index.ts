@@ -1,18 +1,28 @@
+import { Entity } from "./database/entities";
 import { createSupabaseServiceClient } from "./database/supabaseServiceClient";
+import { handleEntitiesMerge } from "./handleEntitiesMerge";
 
 
 let sharedEnv: Env | undefined = undefined;
 
 
 export default {
-	async queue(batch, env): Promise<void> {
+	async queue(batch: MessageBatch, env): Promise<void> {
 		sharedEnv = env
 		const promises = []
 		for (const message of batch.messages){
+			const {entities} = message.body as {
+				entities: Entity[]
+			}
 			// batch to ingest
 			// we will do it all at once so just fire all of them and hope for the best
-			promises.push(await handleEntitiesMerge(message.body))
+			promises.push(await handleEntitiesMerge(entities))
 		}
+
+
+		const results = await Promise.all(promises)
+
+		console.log(`FINISHED QUEUE BATCHES WORK. BATCH NUM: ${batch.messages.length}`)
 		
 	},
 	async scheduled(
