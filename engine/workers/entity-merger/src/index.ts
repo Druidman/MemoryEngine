@@ -7,9 +7,11 @@ let sharedEnv: Env | undefined = undefined;
 export default {
 	async queue(batch, env): Promise<void> {
 		sharedEnv = env
+		const promises = []
 		for (const message of batch.messages){
-			console.log('received message')	
-			console.log(message.body)
+			// batch to ingest
+			// we will do it all at once so just fire all of them and hope for the best
+			promises.push(await handleEntitiesMerge(message.body))
 		}
 		
 	},

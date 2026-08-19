@@ -13,13 +13,4 @@ export const EntitySchema = z.object({
   updated_at: z.coerce.date(),
 });
 
-export type EntityType = z.infer<typeof EntitySchema>
-
-
-export const EntityRepresentationSchema = z.object({
-  canonical_name: z.string(),
-  type: z.string(),
-  aliases: z.array(z.string()).default([])
-})
-
-export type EntityRepresentationType = z.infer<typeof EntityRepresentationSchema>
+export type Entity = z.infer<typeof EntitySchema>
