@@ -36,7 +36,7 @@ export default {
 			.from('entities')
 			.select('*')
 			.eq('status', 'awaiting_merge')
-			.limit(100) // max batch limit
+			.limit(10) // max batch limit
 		if (error) throw error
 
 		if (!data) {

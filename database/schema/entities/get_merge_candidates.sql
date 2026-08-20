@@ -6,11 +6,31 @@ as $$
 declare
     
 begin
-with selected_entities as (
-    select * from entities e where e.status='awaiting_for_merge' and e.container_id=p_container_id limit 100
+with awaiting_candidates as
+(
+    select 
+        (
+            select array_agg(e2.*) from public.entities e2 where 
+            e2.container_id=e.container_id
+            and e2.status='awaiting_merge' limit 10
+        ) as entities,
+        ac.container_id as container_id
+    from public.entities e group by e.container_id;
 ), candidates as (
-    select *, as similarity
+    select 
+        (
+            -- we need to perform entire container scan for given entity
+            select 
+                case
+                    when (
+                        select (1 - ()) as similarity from eorder by similarity limit 1
+                    ) then 
+                        e
+                else NULL
+                end 
+            from unnest(ac.entities) as e 
+        )
+    from awaiting_candidates ac
 )
-
 end;
 $$;
