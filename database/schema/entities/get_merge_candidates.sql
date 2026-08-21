@@ -1,5 +1,5 @@
 create or replace function get_merge_candidates(p_container_id uuid) returns jsonb
-language plpgsql
+language sql
 security invoker
 set search_path='public'
 as $$
@@ -22,15 +22,19 @@ with awaiting_candidates as
             -- we need to perform entire container scan for given entity
             select 
                 case
-                    when (
-                        select (1 - ()) as similarity from eorder by similarity limit 1
-                    ) then 
-                        e
+                    when 
+                    (
+                        select similarity from (
+                            select 
+                                (1 - (e2.embedding <=> e.embedding)) as similarity
+                            from entities e2 order by similarity desc limit 1
+                        )
+                    ) >= 0.85 then e
                 else NULL
                 end 
             from unnest(ac.entities) as e 
         )
     from awaiting_candidates ac
-)
+);
 end;
 $$;

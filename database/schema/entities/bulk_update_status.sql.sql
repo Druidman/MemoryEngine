@@ -3,7 +3,7 @@ language sql
 security invoker
 set search_path='public'
 as $$
-
+-- bulk updater
         UPDATE public.entities set 
             status=e->>'status'
         FROM unnest(p_entities) as e
