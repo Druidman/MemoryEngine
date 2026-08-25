@@ -37,6 +37,7 @@ export default {
 			.select('*')
 			.eq('status', 'awaiting_merge')
 			.limit(10) // max batch limit
+			
 		if (error) throw error
 
 		if (!data) {
