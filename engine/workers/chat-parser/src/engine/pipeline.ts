@@ -74,6 +74,7 @@ export async function runExtractionPipeline(
   logExtractionPipeline('Inserting entities to database...')
   const entitiesWithEnsuredRefs = await insertEntitiesToDatabase(resolvedEntities, containerId, supabaseClient)
   logExtractionPipeline('Inserted entities to database.')
+  logExtractionPipeline('Entities with ensured refs: ', entitiesWithEnsuredRefs)
 
   // First ensure that refs are propagated into relations
   const entityLocalIdHashTable: {[x in string]: MappedExtractedEntityWithMentionsAndEnsuredRefType} = {}

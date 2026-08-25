@@ -11,7 +11,10 @@ export async function addEmbeddingForEntities(entities: MappedExtractedEntityWit
       textToEmbed: `ENTITY: ${entity.canonical_name}, TYPE: ${entity.type}`
     }))
   console.log(entitiesToEmbed)
-
+  if (entitiesToEmbed.length == 0){
+    logExtractionPipeline('Nothing to embed. Finishing.')
+    return entitiesToEmbed
+  }
   logExtractionPipeline('Calling embedder model...')
   const embeddedEntities = await callEmbedder(entitiesToEmbed)
   logExtractionPipeline('Embedding finished.')

@@ -30,6 +30,7 @@ export async function entityResolver(
     mappedExtractionData.entities,
     mappedExtractionData.relations
   );
+  logExtractionPipeline('Results of internal entity deduplication. ', deduplicatedEntities)
   const deduplicatedRelations = deduplicateRelationsInExtractionScope(
     mappedRelationsWithUpdatedIds,
   );
