@@ -84,7 +84,7 @@ Promise<
     }
   } catch(error){
     if (!(error instanceof z.ZodError)){
-      console.log(`[CALL_MODEL_F]: UNKNOWN ERROR: ${error}`)
+      console.log(`[CALL_MODEL_F]: ERROR: ${error}`)
     }
     // retry if possible
     if ((_retryNum ?? 0) >= MAX_RETRIES){
@@ -108,8 +108,12 @@ async function callOpenRouterModel(body: {}, destination: string = '/chat/comple
   if (!response.ok) {
     throw new Error(`OpenRouter error: ${response.status} ${await response.text()}`);
   }
-  const data = await response.json();
-  return data
+  try {
+    return await response.json()
+  } catch (error){
+    console.log(`[CALL_OPENROUTER_MODEL_F] Error when making json out of response: ${response}`)
+    throw error
+  }
 }
 
 async function callGeneralModel(model: string, sys_prompt: string, messages: ChatMessages[],   validation_schema?: z.ZodObject){
@@ -132,16 +136,36 @@ async function callGeneralModel(model: string, sys_prompt: string, messages: Cha
           schema: validation_schema?.toJSONSchema(),
         }
       },
+      // Could help with json fixing...
+      plugins: [
+        { id: 'response-healing' }
+      ]
     } : null)
   }) as OpenRouterCompletion
 
   const raw = completion.choices[0].message.content as string;
- 
-  const message = validation_schema ? validation_schema.parse(JSON.parse(raw)) : raw
+  
+  let parsedRaw: string | unknown;
+  let message: Record<string, unknown> | string | unknown;
+
+  try {
+    parsedRaw = validation_schema ? JSON.parse(raw) : raw
+  } catch (error){
+    console.log(`[CALL_GENERAL_MODEL_F] Error when parsing json: ${raw}`)
+    throw error
+  }
+
+  try {
+    message = validation_schema ? validation_schema.parse(parsedRaw) : parsedRaw
+  } catch (error){
+    console.log(`[CALL_GENERAL_MODEL_F] Error when validating json schema for json: ${parsedRaw}`)
+    throw error
+  }
+  
   const reasoning = completion.choices[0].message.reasoning;
 
   return { 
-    message: message as z.infer<typeof validation_schema>, 
+    message: message, 
     reasoning: reasoning ?? undefined 
   } as any;
 }
