@@ -6,23 +6,26 @@ export function deduplicateEntitiesInExtractionScope(
 ): {deduplicatedEntities: MappedExtractedEntityWithMentionsType[], mappedRelationsWithUpdatedIds: MappedExtractedEntityRelationType[]} {
   // key is canon_name + type
   const entities: { [x in string]: MappedExtractedEntityWithMentionsType } = {};
+  const entitiesById: { [x in string]: MappedExtractedEntityType } = {};
   
   mappedExtractedEntities.forEach((entity) => {
-    const idName = entity.canonical_name + entity.type;
+    entitiesById[entity.local_id] = entity
 
-    if (idName in entities) {
+    const mergeIdName = entity.canonical_name + entity.type;
+
+    if (mergeIdName in entities) {
       // key exists
       // we need to merge it
-      entities[idName] = mergeEntityWithMention(entities[idName], entity);
+      entities[mergeIdName] = mergeEntityWithMention(entities[mergeIdName], entity);
 
       // ! id change appeared ! NEW FIX
       const foundIndex = mappedRelations.findIndex((relation)=>relation.local_subject_id == entity.local_id || relation.local_object_id == entity.local_id)
       if (foundIndex != -1){
         if (mappedRelations[foundIndex].local_subject_id == entity.local_id){
-          mappedRelations[foundIndex].local_subject_id = entities[idName].local_id
+          mappedRelations[foundIndex].local_subject_id = entities[mergeIdName].local_id
         }
         else if (mappedRelations[foundIndex].local_object_id == entity.local_id){
-          mappedRelations[foundIndex].local_object_id = entities[idName].local_id
+          mappedRelations[foundIndex].local_object_id = entities[mergeIdName].local_id
         }
       }
       
@@ -30,25 +33,27 @@ export function deduplicateEntitiesInExtractionScope(
     } else {
       // add new entry
       const {canonical_name, type, ...mention} = entity
-      entities[idName] = {
+      
+      entities[mergeIdName] = {
         ...entity,
         mentions: [mention],
       };
 
+
       // here no id change appears so we chill
     }
   });
-  // // check 
-  // mappedRelations.forEach((relation)=>{
-  //   if (relation.subject_id in entities){
-  //     console.log('SUBJECT NOT FOUND FOR RELATION')
-  //     console.log(relation)
-  //   }
-  //   if (relation.object_id in entities){
-  //     console.log('OBJECT NOT FOUND FOR RELATION')
-  //     console.log(relation)
-  //   }
-  // })
+  // check 
+  mappedRelations.forEach((relation)=>{
+    if (!(relation?.local_subject_id in entitiesById)){
+      console.log('SUBJECT NOT FOUND FOR RELATION')
+      console.log(relation)
+    }
+    if (!(relation?.local_object_id in entitiesById)){
+      console.log('OBJECT NOT FOUND FOR RELATION')
+      console.log(relation)
+    }
+  })
   return {deduplicatedEntities: Object.values(entities), mappedRelationsWithUpdatedIds: mappedRelations}
 }
 
