@@ -84,8 +84,7 @@ export function deduplicateRelationsInExtractionScope(
 	}));
 }
 
-// TWEAKABLE MERGER FORMULA. USED ONLY FOR LOCAL MERGES (CURRENTLY NOT EVEN USED)
-// [REDUNDANT]
+// TWEAKABLE MERGER FORMULA. USED ONLY FOR LOCAL MERGES
 function mergeEntityWithMention(baseEntity: MappedExtractedEntityWithMentionsType, candidate: MappedExtractedEntityType) {
 	const mergedEntity = baseEntity;
 	// merge two results
