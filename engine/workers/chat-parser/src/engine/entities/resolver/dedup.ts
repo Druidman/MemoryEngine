@@ -27,20 +27,26 @@ export function deduplicateEntitiesInExtractionScope(
 
 			// ! id change appeared !
 			// Now that it is merged we need to replace old id with new base one
-			const foundIndex = mappedRelations.findIndex(
-				(relation) => relation.local_subject_id == entity.local_id || relation.local_object_id == entity.local_id,
+			const foundIndexes = mappedRelations.flatMap(
+				(relation, i) => {
+					if (relation.local_subject_id == entity.local_id || relation.local_object_id == entity.local_id){
+						return [i]
+					}
+					return []
+				}
 			);
-			if (foundIndex != -1) {
-				if (mappedRelations[foundIndex].local_subject_id == entity.local_id) {
-					mappedRelations[foundIndex].local_subject_id = entities[mergeIdName].local_id;
-				} else if (mappedRelations[foundIndex].local_object_id == entity.local_id) {
-					mappedRelations[foundIndex].local_object_id = entities[mergeIdName].local_id;
+			foundIndexes.forEach((i)=>{
+				if (mappedRelations[i].local_subject_id == entity.local_id) {
+					mappedRelations[i].local_subject_id = entities[mergeIdName].local_id;
+				} else if (mappedRelations[i].local_object_id == entity.local_id) {
+					mappedRelations[i].local_object_id = entities[mergeIdName].local_id;
 				} else {
           const message = 'Index finding by local id reference is implemented incorrectly!'
           logExtractionPipeline('[deduplicateEntitiesInExtractionScope]', message)
           throw new Error(message)
         }
-			}
+			})
+
 		} else {
 			// add new entry
 			const { canonical_name, type, ...mention } = entity;
