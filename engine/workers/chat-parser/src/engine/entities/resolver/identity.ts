@@ -75,6 +75,7 @@ export async function assignExternalRefsToEntities(
 			return { ...entity, ...(externalRef ? { ref_id: externalRef, is_new: false } : { is_new: true }) };
 		}),
 	);
+	
 }
 export async function assignExternalRefToRelations(
 	relations: MappedExtractedEntityRelationWithMentionsAndExternalIdsType[],
