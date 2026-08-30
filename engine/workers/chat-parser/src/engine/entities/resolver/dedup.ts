@@ -41,9 +41,6 @@ export function deduplicateEntitiesInExtractionScope(
           throw new Error(message)
         }
 			}
-      else {
-        logExtractionPipeline('[deduplicateEntitiesInExtractionScope]', 'Found entity which does not have any refference in any of relations as either object or subject', entity, mappedRelations)
-      }
 		} else {
 			// add new entry
 			const { canonical_name, type, ...mention } = entity;
@@ -125,6 +122,7 @@ function mergeEntityWithMention(baseEntity: MappedExtractedEntityWithMentionsTyp
 		}, 1);
 
 	mergedEntity.confidence = confidence;
-
-	return mergedEntity;
+	const { canonical_name, type, ...mention } = candidate;
+	mergedEntity.mentions.push(mention)
+	return mergedEntity
 }

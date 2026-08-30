@@ -2,10 +2,21 @@
 
 import { createSupabaseClient } from "./database/supabaseClient";
 import { runExtractionPipeline } from "./engine/pipeline";
-let cachedEnv: Env;
+import { inspect } from 'util';
+
+function handleConfig(){
+	if (getEnv().ENVIRONMENT == 'dev'){
+		inspect.defaultOptions.depth = null;
+	}
+}
+let sharedEnv: Env;
+
 export default {
 	async fetch(request: Request, env: Env) {
-		cachedEnv = env;
+		sharedEnv = env;
+		handleConfig()
+
+
 		const {
 			sessionId,
 			containerId,
@@ -27,7 +38,10 @@ export default {
     return new Response('queued', { status: 202 });
   },
 	async queue(batch: MessageBatch, env: Env) {
-		cachedEnv = env;
+		sharedEnv = env;
+		handleConfig()
+
+
     for (const message of batch.messages) {
       const { sessionId, containerId, messages, supabaseToken } = message.body as {
 			sessionId: string,
@@ -41,6 +55,8 @@ export default {
   },
 } satisfies ExportedHandler<Env>;
 
-export function getEnv(): Env {
-  return cachedEnv;
+export function getEnv(){
+	if (!sharedEnv)
+		throw new Error('getEnv invoked before any internal worker call is prohibited')
+	return sharedEnv
 }
